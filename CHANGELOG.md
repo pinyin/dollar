@@ -4,4 +4,6 @@
 
 ## 0.0.2
 
-- Add TravisCI support
+- Add TravisCI support.
+- Rename `$cursor` to `$ref`.
+- Add `$var` and `$scan`.

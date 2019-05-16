@@ -1,6 +1,8 @@
 import 'package:collection/collection.dart';
 
-T Function(R) $handle<T, R>(T func(R params), void handler(Object effect)) {
+typedef $EffectHandler = void Function(Object effect);
+
+T Function(R) $handle<T, R>(T func(R params), $EffectHandler handler) {
   assert(_cursors == null);
   final cursors = _Cursors();
 
@@ -25,15 +27,15 @@ T Function(R) $handle<T, R>(T func(R params), void handler(Object effect)) {
   };
 }
 
-$Cursor<T> $cursor<T>(T init()) {
-  final result = _cursors.cursor ??= $Cursor<T>()..value = init();
+$Ref<T> $ref<T>(T init()) {
+  final result = _cursors.cursor ??= _$RefImpl<T>()..value = init();
   _cursors.cursorNext();
   return result;
 }
 
 T $if<T>(bool condition, T then(), {T orElse()}) {
-  final thenCursors = $cursor(() => _Cursors());
-  final orElseCursors = $cursor(() => _Cursors());
+  final thenCursors = $ref(() => _Cursors());
+  final orElseCursors = $ref(() => _Cursors());
 
   T result;
 
@@ -54,26 +56,36 @@ T $if<T>(bool condition, T then(), {T orElse()}) {
   return result;
 }
 
-void $effect(Object effect) {
-  _handler(effect);
-}
+$EffectHandler get $effect => _handler;
 
-class $Cursor<T> {
-  T get value => _value;
-  set value(T newValue) => _value = newValue;
+abstract class $Ref<T> {
+  T get value;
+  set value(T newValue);
 
   T get() => value;
+  T set(T newValue) => value = newValue;
+}
+
+class _$RefImpl<T> extends $Ref<T> {
+  @override
+  T get value => _value;
+  @override
+  set value(T newValue) => _value = newValue;
+
+  @override
+  T get() => value;
+  @override
   T set(T newValue) => value = newValue;
 
   T _value;
 }
 
 class _Cursors {
-  set cursor($Cursor status) => _cursor == _cursors.length
+  set cursor($Ref status) => _cursor == _cursors.length
       ? _cursors.addLast(status)
       : _cursors[_cursor] = status;
 
-  $Cursor get cursor =>
+  $Ref get cursor =>
       _cursors.length > _cursor ? _cursors.elementAt(_cursor) : null;
 
   void cursorNext() => _cursor++;
@@ -81,9 +93,9 @@ class _Cursors {
   void cursorReset() => _cursor = 0;
 
   int _cursor = 0;
-  QueueList<$Cursor> _cursors = QueueList();
+  QueueList<$Ref> _cursors = QueueList();
 }
 
 _Cursors _cursors;
 
-void Function(Object effect) _handler;
+$EffectHandler _handler;

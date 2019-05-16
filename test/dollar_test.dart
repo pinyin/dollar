@@ -17,8 +17,8 @@ void main() {
       test('should provide a cursor context', () {
         final effects = [];
         final func = $handle((_) {
-          $cursor(() => $effect(effects.length + 1));
-          $cursor(() => $effect(effects.length + 1));
+          $ref(() => $effect(effects.length + 1));
+          $ref(() => $effect(effects.length + 1));
         }, effects.add);
         expect(effects, []);
         func(null);
@@ -29,10 +29,10 @@ void main() {
     });
     group('cursor', () {
       test('should keep updates across calls', () {
-        $Cursor<int> cursor;
+        $Ref<int> cursor;
         final func = $handle((_) {
-          cursor = $cursor(() => 1);
-          $cursor(() => 2);
+          cursor = $ref(() => 1);
+          $ref(() => 2);
         }, (effect) {});
         func(null);
         expect(cursor?.value, 1);
@@ -52,13 +52,13 @@ void main() {
         expect(func(false), 2);
       });
       test('should create separated cursor context', () {
-        $Cursor<int> a;
-        $Cursor<int> b;
+        $Ref<int> a;
+        $Ref<int> b;
         final func = $handle((bool input) {
-          a = $cursor(() => 1);
+          a = $ref(() => 1);
           b = $if(input, () {
-            return $cursor(() => 2);
-          }, orElse: () => $cursor(() => 3));
+            return $ref(() => 2);
+          }, orElse: () => $ref(() => 3));
           a.value++;
           b.value--;
         }, (_) {});
@@ -74,6 +74,54 @@ void main() {
         func(false);
         expect(a?.value, 5);
         expect(b?.value, 1);
+      });
+    });
+  });
+
+  group('effects', () {
+    group('var', () {
+      test('should emit VarEffect', () {
+        final effects = [];
+        final func = $handle((_) {
+          return $var(() => 1);
+        }, effects.add);
+        var v = func(null);
+        v.value = 2;
+        expect(effects, [$VarUpdateEffect(1, 2)]);
+        effects.clear();
+        v = func(null);
+        v.value = 3;
+        expect(effects, [$VarUpdateEffect(2, 3)]);
+      });
+    });
+
+    group('scan', () {
+      test('should run work when keys are not equal', () {
+        int runCount = 0;
+        int cleanCount = 0;
+        $Ref keyRef;
+        final func = $handle((_) {
+          keyRef = $ref(() => 0);
+          $scan((_, __) {
+            runCount++;
+            return () {
+              cleanCount++;
+            };
+          }, [keyRef.value]);
+        }, (_) {});
+        func(null);
+        expect(runCount, 1);
+        expect(cleanCount, 0);
+        func(null);
+        expect(runCount, 1);
+        expect(cleanCount, 0);
+        keyRef.value++;
+        func(null);
+        expect(runCount, 2);
+        expect(cleanCount, 1);
+        func(null);
+        expect(runCount, 2);
+        expect(cleanCount, 1);
       });
     });
   });
