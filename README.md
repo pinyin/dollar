@@ -1,12 +1,16 @@
 # dollar
 
-Write side effects in sync functions.
+[![Build Status](https://travis-ci.com/pinyin/dollar.svg?branch=master)](https://travis-ci.com/pinyin/dollar)
+
+Write async side effects in sync functions.
 
 Inspired by hooks in React.
 
 ## Usage
 
 ```dart
+
+import 'package:dollar/dollar.dart';
 
 final func = $handle((bool input) {
   final a = $cursor(() => 1);
@@ -15,8 +19,8 @@ final func = $handle((bool input) {
   }, orElse: ()=> $cursor(()=> 3));
   a.value ++; 
   b.value --;
-  // use a / b to trigger side effects
-}, effects.add);
+  // use a & b 
+}, (_) {});
 // values of a & b will be kept across different calls
 func(true);
 // a.value == 2, b.value == 1
