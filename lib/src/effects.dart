@@ -41,12 +41,12 @@ class $VarUpdateEffect<T> {
   $VarUpdateEffect(this.from, this.to);
 }
 
-void $scan<R extends Function()>(
+R $scan<R extends Function()>(
     R work(R prev, Iterable prevKeys), Iterable keys) {
   final prevKeys = $ref(() => keys);
   final status = $ref<R>(() => null);
 
-  $if(status.value == null || !shallowEquals(prevKeys.value, keys), () {
+  return $if(status.value == null || !shallowEquals(prevKeys.value, keys), () {
     $if(status.value != null, () {
       print(status.value);
       (status.value as dynamic)();
@@ -55,6 +55,7 @@ void $scan<R extends Function()>(
     status.value = work(status.value, prevKeys.value);
     $effect($NeedCleanUpEffect(status.value));
     prevKeys.value = keys;
+    return status.value;
   });
 }
 
