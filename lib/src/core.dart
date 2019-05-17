@@ -9,6 +9,7 @@ R Function(T) $handle<T, R>(R func(T params), [$EffectHandler handler]) {
 
   return (T params) {
     // TODO support arbitrary parameters
+    // TODO improve performance
     final prevContext = _context;
     _context = context;
     _context.cursorReset();

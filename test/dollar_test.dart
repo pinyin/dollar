@@ -87,7 +87,7 @@ void main() {
   group('effects', () {
     group('var', () {
       test('should emit VarEffect', () {
-        final effects = <$VarUpdateEffect>[];
+        final effects = <$UpdateVar>[];
         final func = $handle((_) {
           return $var(() => 1);
         }, effects.add);
@@ -150,7 +150,7 @@ void main() {
         func(null);
         func(null);
         expect(effects.length, 1);
-        expect(effects[0] is $ListenerAddedEffect<int>, true);
+        expect(effects[0] is $AddListener<int>, true);
       });
       test('should wrap callback into an effect', () {
         final effects = [];
@@ -165,12 +165,12 @@ void main() {
         func(null);
         func(null);
         expect(effects.length, 1);
-        expect(effects[0] is $ListenerAddedEffect<int>, true);
-        (effects[0] as $ListenerAddedEffect<int>).callback(1);
+        expect(effects[0] is $AddListener<int>, true);
+        (effects[0] as $AddListener<int>).callback(1);
         func(null);
         expect(result, 1);
         expect(effects.length, 1);
-        (effects[0] as $ListenerAddedEffect<int>).callback(1);
+        (effects[0] as $AddListener<int>).callback(1);
         func(null);
         expect(result, 2);
         expect(effects.length, 1);

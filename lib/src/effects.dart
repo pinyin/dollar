@@ -32,7 +32,7 @@ R $listen<T, R>(R callback(T value)) {
   final result = $ref<R>(() => null);
 
   $final(() {
-    $effect($ListenerAddedEffect(
+    $effect($AddListener(
         $handle<T, R>((T event) => result.value = listener.value(event))));
   });
 
@@ -53,7 +53,7 @@ class _$VarImpl<T> extends $Var<T> {
 
   @override
   set value(T newValue) {
-    final effect = $VarUpdateEffect(_value, newValue, _ref);
+    final effect = $UpdateVar(_value, newValue, _ref);
     _value = newValue;
     _$effect(effect);
   }
@@ -68,31 +68,32 @@ class _$VarImpl<T> extends $Var<T> {
         _$effect = $effect;
 }
 
-class $VarUpdateEffect<T> extends $Effect {
+class $UpdateVar<T> extends $Effect {
   final T from;
   final T to;
   final $Ref at;
 
   @override
   bool operator ==(other) {
-    return other is $VarUpdateEffect<T> &&
+    return other is $UpdateVar<T> &&
         other.runtimeType == runtimeType &&
         other.from == from &&
-        other.to == to;
+        other.to == to &&
+        other.at == at;
   }
 
   @override
   int get hashCode => from.hashCode ^ to.hashCode;
 
-  $VarUpdateEffect(this.from, this.to, this.at);
+  $UpdateVar(this.from, this.to, this.at);
 }
 
-class $ListenerAddedEffect<T> implements $Effect {
+class $AddListener<T> implements $Effect {
   final Function(T) callback;
 
   @override
   bool operator ==(other) {
-    return other is $ListenerAddedEffect<T> &&
+    return other is $AddListener<T> &&
         other.runtimeType == runtimeType &&
         other.callback == callback;
   }
@@ -100,7 +101,23 @@ class $ListenerAddedEffect<T> implements $Effect {
   @override
   int get hashCode => runtimeType.hashCode ^ callback.hashCode;
 
-  $ListenerAddedEffect(this.callback);
+  $AddListener(this.callback);
+}
+
+class $RemoveListener<T> implements $Effect {
+  final Function(T) callback;
+
+  @override
+  bool operator ==(other) {
+    return other is $RemoveListener<T> &&
+        other.runtimeType == runtimeType &&
+        other.callback == callback;
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode ^ callback.hashCode;
+
+  $RemoveListener(this.callback);
 }
 
 final shallowEquals = const IterableEquality().equals;
