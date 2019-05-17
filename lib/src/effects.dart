@@ -2,10 +2,31 @@ import 'package:collection/collection.dart';
 import 'package:dollar/dollar.dart';
 
 $Var<T> $var<T>(T init()) {
-  return $ref(() => _$VarImpl(init(), $effect)).value;
+  final ref = $ref<$Var<T>>(() => null);
+  $if(ref.value == null, () {
+    ref.value = _$VarImpl(ref, init(), $effect);
+  });
+  return ref.value;
 }
 
-abstract class $Var<T> extends $Ref<T> {}
+R $scan<R>(R work(R prev, Iterable prevKeys), Iterable keys) {
+  final prevKeys = $ref(() => keys);
+  final status = $ref<R>(() => null);
+
+  return $if(status.value == null || !shallowEquals(prevKeys.value, keys), () {
+    status.value = work(status.value, prevKeys.value);
+    prevKeys.value = keys;
+    return status.value;
+  }, orElse: () => status.value);
+}
+
+abstract class $Var<T> {
+  T get value;
+  set value(T newValue);
+
+  T get() => value;
+  T set(T newValue) => value = newValue;
+}
 
 class _$VarImpl<T> extends $Var<T> {
   @override
@@ -13,22 +34,25 @@ class _$VarImpl<T> extends $Var<T> {
 
   @override
   set value(T newValue) {
-    final effect = $VarUpdateEffect(_value, newValue);
+    final effect = $VarUpdateEffect(_value, newValue, _ref);
     _value = newValue;
     _$effect(effect);
   }
 
+  $Ref _ref;
   T _value;
   $EffectHandler _$effect;
 
-  _$VarImpl(T value, $EffectHandler $effect)
-      : _value = value,
+  _$VarImpl($Ref ref, T value, $EffectHandler $effect)
+      : _ref = ref,
+        _value = value,
         _$effect = $effect;
 }
 
-class $VarUpdateEffect<T> {
+class $VarUpdateEffect<T> extends $Effect {
   final T from;
   final T to;
+  final $Ref at;
 
   @override
   bool operator ==(other) {
@@ -38,37 +62,7 @@ class $VarUpdateEffect<T> {
   @override
   int get hashCode => from.hashCode ^ to.hashCode;
 
-  $VarUpdateEffect(this.from, this.to);
-}
-
-R $scan<R extends Function()>(
-    R work(R prev, Iterable prevKeys), Iterable keys) {
-  final prevKeys = $ref(() => keys);
-  final status = $ref<R>(() => null);
-
-  return $if(status.value == null || !shallowEquals(prevKeys.value, keys), () {
-    $if(status.value != null, () {
-      print(status.value);
-      (status.value as dynamic)();
-      $effect($CleanedUpEffect(status.value));
-    });
-    status.value = work(status.value, prevKeys.value);
-    $effect($NeedCleanUpEffect(status.value));
-    prevKeys.value = keys;
-    return status.value;
-  });
-}
-
-class $NeedCleanUpEffect {
-  final Function() status;
-
-  $NeedCleanUpEffect(this.status);
-}
-
-class $CleanedUpEffect {
-  final Function() status;
-
-  $CleanedUpEffect(this.status);
+  $VarUpdateEffect(this.from, this.to, this.at);
 }
 
 final shallowEquals = const IterableEquality().equals;

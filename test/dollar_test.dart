@@ -4,27 +4,15 @@ import 'package:test/test.dart';
 void main() {
   group('core', () {
     group('handle', () {
-      test('should wrap input function in a handler', () {
-        final effects = [];
+      test('should forward effects to handler', () {
+        final effects = <_MockEffect>[];
         final func = $handle((_) {
-          $effect(1);
-          $effect(2);
+          $effect(_MockEffect($ref(() => 1)));
+          $effect(_MockEffect($ref(() => 2)));
         }, effects.add);
         expect(effects, []);
         func(null);
-        expect(effects, [1, 2]);
-      });
-      test('should provide a cursor context', () {
-        final effects = [];
-        final func = $handle((_) {
-          $ref(() => $effect(effects.length + 1));
-          $ref(() => $effect(effects.length + 1));
-        }, effects.add);
-        expect(effects, []);
-        func(null);
-        expect(effects, [1, 2]);
-        func(null);
-        expect(effects, [1, 2]);
+        expect(effects.map((e) => e.at.value), [1, 2]);
       });
     });
     group('cursor', () {
@@ -81,48 +69,61 @@ void main() {
   group('effects', () {
     group('var', () {
       test('should emit VarEffect', () {
-        final effects = [];
+        final effects = <$VarUpdateEffect>[];
         final func = $handle((_) {
           return $var(() => 1);
         }, effects.add);
         var v = func(null);
         v.value = 2;
-        expect(effects, [$VarUpdateEffect(1, 2)]);
+        expect(effects[0].from, 1);
+        expect(effects[0].to, 2);
         effects.clear();
         v = func(null);
         v.value = 3;
-        expect(effects, [$VarUpdateEffect(2, 3)]);
+        expect(effects[0].from, 2);
+        expect(effects[0].to, 3);
       });
     });
 
     group('scan', () {
-      test('should run work when keys are not equal', () {
+      test('should run work when keys are updated', () {
         int runCount = 0;
-        int cleanCount = 0;
         $Ref keyRef;
         final func = $handle((_) {
           keyRef = $ref(() => 0);
           $scan((_, __) {
-            runCount++;
-            return () {
-              cleanCount++;
-            };
+            return runCount++;
           }, [keyRef.value]);
         }, (_) {});
         func(null);
         expect(runCount, 1);
-        expect(cleanCount, 0);
         func(null);
         expect(runCount, 1);
-        expect(cleanCount, 0);
         keyRef.value++;
         func(null);
         expect(runCount, 2);
-        expect(cleanCount, 1);
         func(null);
         expect(runCount, 2);
-        expect(cleanCount, 1);
+      });
+      test('should provide value to next scan', () {
+        int fibonacci = 0;
+        final func = $handle((_) {
+          return $scan<int>((prev, __) {
+            prev ??= 1;
+            return prev + fibonacci;
+          }, [fibonacci]);
+        }, (_) {});
+        fibonacci = func(null);
+        expect(fibonacci, 1);
+        fibonacci = func(null);
+        expect(fibonacci, 2);
       });
     });
   });
+}
+
+class _MockEffect<T> implements $Effect {
+  final $Ref<T> at;
+
+  _MockEffect(this.at);
 }

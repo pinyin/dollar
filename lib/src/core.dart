@@ -1,7 +1,5 @@
 import 'package:collection/collection.dart';
 
-typedef $EffectHandler = void Function(Object effect);
-
 T Function(R) $handle<T, R>(T func(R params), $EffectHandler handler) {
   assert(_cursors == null);
   final cursors = _Cursors();
@@ -57,6 +55,12 @@ T $if<T>(bool condition, T then(), {T orElse()}) {
 }
 
 $EffectHandler get $effect => _handler;
+
+abstract class $Effect {
+  $Ref get at;
+}
+
+typedef $EffectHandler = void Function($Effect effect);
 
 abstract class $Ref<T> {
   T get value;
