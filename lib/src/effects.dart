@@ -2,15 +2,21 @@ import 'package:collection/collection.dart';
 import 'package:dollar/dollar.dart';
 
 $Var<T> $var<T>(T init()) {
+  final didInit = $ref(() => false);
   final ref = $ref<$Var<T>>(() => null);
-  $if(ref.value == null, () {
+  $if(!didInit.value, () {
     ref.value = _$VarImpl(ref, init(), $effect);
+    didInit.value = true;
   });
   return ref.value;
 }
 
+T $final<T>(T init()) {
+  return $var(init).value;
+}
+
 R $scan<R>(R work(R prev, Iterable prevKeys), Iterable keys) {
-  final prevKeys = $ref(() => keys);
+  final prevKeys = $ref<Iterable>(() => null);
   final status = $ref<R>(() => null);
 
   return $if(status.value == null || !shallowEquals(prevKeys.value, keys), () {
@@ -18,6 +24,19 @@ R $scan<R>(R work(R prev, Iterable prevKeys), Iterable keys) {
     prevKeys.value = keys;
     return status.value;
   }, orElse: () => status.value);
+}
+
+R $listen<T, R>(R callback(T value)) {
+  final listener = $ref<R Function(T)>(() => callback);
+  listener.value = callback;
+  final result = $ref<R>(() => null);
+
+  $final(() {
+    $effect($ListenerAddedEffect(
+        $handle<T, R>((T event) => result.value = listener.value(event))));
+  });
+
+  return result.value;
 }
 
 abstract class $Var<T> {
@@ -56,13 +75,32 @@ class $VarUpdateEffect<T> extends $Effect {
 
   @override
   bool operator ==(other) {
-    return other is $VarUpdateEffect && other.from == from && other.to == to;
+    return other is $VarUpdateEffect<T> &&
+        other.runtimeType == runtimeType &&
+        other.from == from &&
+        other.to == to;
   }
 
   @override
   int get hashCode => from.hashCode ^ to.hashCode;
 
   $VarUpdateEffect(this.from, this.to, this.at);
+}
+
+class $ListenerAddedEffect<T> implements $Effect {
+  final Function(T) callback;
+
+  @override
+  bool operator ==(other) {
+    return other is $ListenerAddedEffect<T> &&
+        other.runtimeType == runtimeType &&
+        other.callback == callback;
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode ^ callback.hashCode;
+
+  $ListenerAddedEffect(this.callback);
 }
 
 final shallowEquals = const IterableEquality().equals;

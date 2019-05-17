@@ -1,64 +1,65 @@
 import 'package:collection/collection.dart';
 
-T Function(R) $handle<T, R>(T func(R params), $EffectHandler handler) {
-  assert(_cursors == null);
-  final cursors = _Cursors();
+R Function(T) $handle<T, R>(R func(T params), [$EffectHandler handler]) {
+  assert(_handler != null || handler != null);
+  assert(_handler == null || handler == null);
+  final _Context context =
+      _context == null ? _Context() : $ref(() => _Context()).value;
+  handler ??= _handler;
 
-  void Function(Object) prevHandler;
-
-  return (R params) {
+  return (T params) {
     // TODO support arbitrary parameters
-    _cursors = cursors;
-    _cursors.cursorReset();
+    final prevContext = _context;
+    _context = context;
+    _context.cursorReset();
 
-    prevHandler = _handler;
+    final prevHandler = _handler;
     _handler = handler;
 
     final result = func(params);
+
     assert(identical(_handler, handler));
     _handler = prevHandler;
 
-    assert(identical(_cursors, cursors));
-    _cursors = null;
+    assert(identical(_context, context));
+    _context = prevContext;
 
     return result;
   };
 }
 
 $Ref<T> $ref<T>(T init()) {
-  final result = _cursors.cursor ??= _$RefImpl<T>()..value = init();
-  _cursors.cursorNext();
+  final $Ref<T> result = _context.cursor ??= _$RefImpl<T>()..value = init();
+  _context.cursorNext();
   return result;
 }
 
 T $if<T>(bool condition, T then(), {T orElse()}) {
-  final thenCursors = $ref(() => _Cursors());
-  final orElseCursors = $ref(() => _Cursors());
+  final thenCursors = $ref(() => _Context());
+  final orElseCursors = $ref(() => _Context());
 
   T result;
 
-  final prevCursors = _cursors;
+  final prevCursors = _context;
   if (condition) {
-    _cursors = thenCursors.value;
-    _cursors.cursorReset();
+    _context = thenCursors.value;
+    _context.cursorReset();
     result = then();
-    assert(identical(_cursors, thenCursors.value));
+    assert(identical(_context, thenCursors.value));
   } else if (orElse != null) {
-    _cursors = orElseCursors.value;
-    _cursors.cursorReset();
+    _context = orElseCursors.value;
+    _context.cursorReset();
     result = orElse();
-    assert(identical(_cursors, orElseCursors.value));
+    assert(identical(_context, orElseCursors.value));
   }
-  _cursors = prevCursors;
+  _context = prevCursors;
 
   return result;
 }
 
 $EffectHandler get $effect => _handler;
 
-abstract class $Effect {
-  $Ref get at;
-}
+abstract class $Effect {}
 
 typedef $EffectHandler = void Function($Effect effect);
 
@@ -84,7 +85,7 @@ class _$RefImpl<T> extends $Ref<T> {
   T _value;
 }
 
-class _Cursors {
+class _Context {
   set cursor($Ref status) => _cursor == _cursors.length
       ? _cursors.addLast(status)
       : _cursors[_cursor] = status;
@@ -100,6 +101,6 @@ class _Cursors {
   QueueList<$Ref> _cursors = QueueList();
 }
 
-_Cursors _cursors;
+_Context _context;
 
 $EffectHandler _handler;

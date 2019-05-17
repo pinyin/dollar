@@ -1,4 +1,5 @@
 import 'package:dollar/dollar.dart';
+import 'package:dollar/src/effects.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -14,19 +15,36 @@ void main() {
         func(null);
         expect(effects.map((e) => e.at.value), [1, 2]);
       });
-    });
-    group('cursor', () {
-      test('should keep updates across calls', () {
-        $Ref<int> cursor;
+      test('should create new ref context', () {
+        final effects = <_MockEffect>[];
         final func = $handle((_) {
-          cursor = $ref(() => 1);
+          $effect(_MockEffect($ref(() => 1)));
+          $effect(_MockEffect($ref(() => 2)));
+          $handle((_) {
+            $effect(_MockEffect($ref(() => 3)));
+            $effect(_MockEffect($ref(() => 4)));
+          })(null);
+        }, effects.add);
+        expect(effects, []);
+        func(null);
+        expect(effects.map((e) => e.at.value), [1, 2, 3, 4]);
+        effects.clear();
+        func(null);
+        expect(effects.map((e) => e.at.value), [1, 2, 3, 4]);
+      });
+    });
+    group('ref', () {
+      test('should keep updates across calls', () {
+        $Ref<int> ref;
+        final func = $handle((_) {
+          ref = $ref(() => 1);
           $ref(() => 2);
         }, (effect) {});
         func(null);
-        expect(cursor?.value, 1);
-        cursor.value++;
+        expect(ref?.value, 1);
+        ref.value++;
         func(null);
-        expect(cursor?.value, 2);
+        expect(ref?.value, 2);
       });
     });
     group('if', () {
@@ -39,7 +57,7 @@ void main() {
         expect(func(true), 1);
         expect(func(false), 2);
       });
-      test('should create separated cursor context', () {
+      test('should create separated ref context', () {
         $Ref<int> a;
         $Ref<int> b;
         final func = $handle((bool input) {
@@ -117,6 +135,45 @@ void main() {
         expect(fibonacci, 1);
         fibonacci = func(null);
         expect(fibonacci, 2);
+      });
+    });
+
+    group('listen', () {
+      test('should emit listener event', () {
+        final effects = [];
+        final listener = (int i) {
+          return;
+        };
+        final func = $handle((_) {
+          $listen(listener);
+        }, effects.add);
+        func(null);
+        func(null);
+        expect(effects.length, 1);
+        expect(effects[0] is $ListenerAddedEffect<int>, true);
+      });
+      test('should wrap callback into an effect', () {
+        final effects = [];
+        var result = 0;
+        final listener = (int i) {
+          final callCount = $ref(() => 0);
+          return callCount.value += i;
+        };
+        final func = $handle((_) {
+          result = $listen(listener);
+        }, effects.add);
+        func(null);
+        func(null);
+        expect(effects.length, 1);
+        expect(effects[0] is $ListenerAddedEffect<int>, true);
+        (effects[0] as $ListenerAddedEffect<int>).callback(1);
+        func(null);
+        expect(result, 1);
+        expect(effects.length, 1);
+        (effects[0] as $ListenerAddedEffect<int>).callback(1);
+        func(null);
+        expect(result, 2);
+        expect(effects.length, 1);
       });
     });
   });
