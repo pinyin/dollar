@@ -15,12 +15,12 @@ T $final<T>(T init()) {
   return $var(init).value;
 }
 
-R $scan<R>(R work(R prev, Iterable prevKeys), Iterable keys) {
+T $scan<T>(T work(T prev), [Iterable keys]) {
   final prevKeys = $ref<Iterable>(() => null);
-  final status = $ref<R>(() => null);
+  final status = $ref<T>(() => null);
 
-  return $if(status.value == null || !shallowEquals(prevKeys.value, keys), () {
-    status.value = work(status.value, prevKeys.value);
+  return $if(keys == null || !shallowEquals(prevKeys.value, keys), () {
+    status.value = work(status.value);
     prevKeys.value = keys;
     return status.value;
   }, orElse: () => status.value);

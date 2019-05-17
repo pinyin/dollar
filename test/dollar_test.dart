@@ -109,7 +109,7 @@ void main() {
         $Ref keyRef;
         final func = $handle((_) {
           keyRef = $ref(() => 0);
-          $scan((_, __) {
+          $scan((_) {
             return runCount++;
           }, [keyRef.value]);
         }, (_) {});
@@ -126,7 +126,7 @@ void main() {
       test('should provide value to next scan', () {
         int fibonacci = 0;
         final func = $handle((_) {
-          return $scan<int>((prev, __) {
+          return $scan<int>((prev) {
             prev ??= 1;
             return prev + fibonacci;
           }, [fibonacci]);
