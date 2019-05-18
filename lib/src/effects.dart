@@ -3,7 +3,7 @@ import 'package:dollar/dollar.dart';
 class $UpdateVar<T> extends $Effect {
   final T from;
   final T to;
-  final $Ref at;
+  final $Cursor at;
 
   @override
   bool operator ==(other) {
@@ -21,7 +21,7 @@ class $UpdateVar<T> extends $Effect {
 }
 
 class $AddListener<T> implements $Effect {
-  final $Ref at;
+  final $Cursor at;
   final Function(T) callback;
   final Type type;
 
@@ -39,7 +39,7 @@ class $AddListener<T> implements $Effect {
 }
 
 class $Ended implements $Effect {
-  final $Ref at;
+  final $Cursor at;
 
   $Ended(this.at);
 }

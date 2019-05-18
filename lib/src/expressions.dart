@@ -2,15 +2,13 @@ import 'package:collection/collection.dart';
 import 'package:dollar/dollar.dart';
 
 $Var<T> $var<T>(T init()) {
-  return $cursor(() {
-    final didInit = $ref(() => false);
-    final ref = $ref<$Var<T>>(() => null);
-    $if(!didInit.value, () {
-      ref.value = _$VarImpl(ref, init(), $effect);
-      didInit.value = true;
-    });
-    return ref.value;
+  final didInit = $cursor(() => false);
+  final ref = $cursor<$Var<T>>(() => null);
+  $if(!didInit.value, () {
+    ref.value = _$VarImpl(ref, init(), $effect);
+    didInit.value = true;
   });
+  return ref.value;
 }
 
 T $final<T>(T init()) {
@@ -18,35 +16,31 @@ T $final<T>(T init()) {
 }
 
 T $previous<T>(T value) {
-  return $cursor(() {
-    final ref = $ref<T>(() => null);
-    final prev = ref.value;
-    ref.value = value;
-    return prev;
-  });
+  final ref = $cursor<T>(() => null);
+  final prev = ref.value;
+  ref.value = value;
+  return prev;
 }
 
 bool $identical(Object value) {
-  return $cursor(() => identical(value, $previous(value)));
+  return identical(value, $previous(value));
 }
 
 bool $shallowEquals(Iterable values) {
-  return $cursor(() => shallowEquals(values, $previous(values)));
+  return shallowEquals(values, $previous(values));
 }
 
 R $listen<T, R>(R callback(T value)) {
-  return $cursor(() {
-    final listener = $ref<R Function(T)>(() => callback);
-    listener.value = callback;
-    final result = $ref<R>(() => null);
+  final listener = $cursor<R Function(T)>(() => callback);
+  listener.value = callback;
+  final result = $cursor<R>(() => null);
 
-    $final(() {
-      $effect($AddListener(
-          $handle((T event) => result.value = listener.value(event)), result));
-    });
-
-    return result.value;
+  $final(() {
+    $effect($AddListener(
+        $handle((T event) => result.value = listener.value(event)), result));
   });
+
+  return result.value;
 }
 
 abstract class $Var<T> {
@@ -68,11 +62,11 @@ class _$VarImpl<T> extends $Var<T> {
     _$effect(effect);
   }
 
-  $Ref _ref;
+  $Cursor _ref;
   T _value;
   $EffectHandler _$effect;
 
-  _$VarImpl($Ref ref, T value, $EffectHandler $effect)
+  _$VarImpl($Cursor ref, T value, $EffectHandler $effect)
       : _ref = ref,
         _value = value,
         _$effect = $effect;

@@ -8,8 +8,8 @@ void main() {
       test('should forward effects to handler', () {
         final effects = <_MockEffect>[];
         final func = $handle((_) {
-          $effect(_MockEffect($ref(() => 1)));
-          $effect(_MockEffect($ref(() => 2)));
+          $effect(_MockEffect($cursor(() => 1)));
+          $effect(_MockEffect($cursor(() => 2)));
         }, effects.add);
         expect(effects, []);
         func(null);
@@ -18,11 +18,11 @@ void main() {
       test('should create new ref context', () {
         final effects = <_MockEffect>[];
         final func = $handle((_) {
-          $effect(_MockEffect($ref(() => 1)));
-          $effect(_MockEffect($ref(() => 2)));
+          $effect(_MockEffect($cursor(() => 1)));
+          $effect(_MockEffect($cursor(() => 2)));
           $handle((_) {
-            $effect(_MockEffect($ref(() => 3)));
-            $effect(_MockEffect($ref(() => 4)));
+            $effect(_MockEffect($cursor(() => 3)));
+            $effect(_MockEffect($cursor(() => 4)));
           })(null);
         }, effects.add);
         expect(effects, []);
@@ -35,10 +35,10 @@ void main() {
     });
     group('ref', () {
       test('should keep updates across calls', () {
-        $Ref<int> ref;
+        $Cursor<int> ref;
         final func = $handle((_) {
-          ref = $ref(() => 1);
-          $ref(() => 2);
+          ref = $cursor(() => 1);
+          $cursor(() => 2);
         }, (effect) {});
         func(null);
         expect(ref?.value, 1);
@@ -58,13 +58,13 @@ void main() {
         expect(func(false), 2);
       });
       test('should create separated ref context', () {
-        $Ref<int> a;
-        $Ref<int> b;
+        $Cursor<int> a;
+        $Cursor<int> b;
         final func = $handle((bool input) {
-          a = $ref(() => 1);
+          a = $cursor(() => 1);
           b = $if(input, () {
-            return $ref(() => 2);
-          }, orElse: () => $ref(() => 3));
+            return $cursor(() => 2);
+          }, orElse: () => $cursor(() => 3));
           a.value++;
           b.value--;
         }, (_) {});
@@ -157,7 +157,7 @@ void main() {
         final effects = [];
         var result = 0;
         final listener = (int i) {
-          final callCount = $ref(() => 0);
+          final callCount = $cursor(() => 0);
           return callCount.value += i;
         };
         final func = $handle((_) {
@@ -186,7 +186,7 @@ void main() {
 }
 
 class _MockEffect<T> implements $Effect {
-  final $Ref<T> at;
+  final $Cursor<T> at;
 
   _MockEffect(this.at);
 }

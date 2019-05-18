@@ -3,8 +3,10 @@ import 'dart:collection';
 R Function(T) $handle<T, R>(R func(T params), [$EffectHandler handler]) {
   assert(_handler == null || handler == null);
   assert(_handler != null || handler != null);
+  // TODO support multiple handler
 
-  final context = _context == null ? _Context() : $ref(() => _Context()).value;
+  final context =
+      _context == null ? _Context() : $cursor(() => _Context()).value;
   handler ??= _handler;
 
   return (T params) {
@@ -28,32 +30,16 @@ R Function(T) $handle<T, R>(R func(T params), [$EffectHandler handler]) {
   };
 }
 
-T $cursor<T>(T effects()) {
-  final context = $ref(() => _Context()).value;
-  context.cursorReset();
-  final lastEffects = $ref(() => effects);
-  lastEffects.value = effects;
-  final result = $ref<T>(() => null);
-
-  // TODO automatically skip
-  final prevContext = _context;
-  _context = context;
-  result.value = lastEffects.value();
-  assert(identical(_context, context));
-  _context = prevContext;
-
-  return result.value;
-}
-
-$Ref<T> $ref<T>(T init()) {
-  final $Ref<T> result = _context.cursor ??= _$RefImpl<T>()..value = init();
+$Cursor<T> $cursor<T>(T init()) {
+  final $Cursor<T> result =
+      _context.cursor ??= _$CursorImpl<T>()..value = init();
   _context.cursorNext();
   return result;
 }
 
 T $if<T>(bool condition, T then(), {T orElse()}) {
-  final thenCursors = $ref(() => _Context());
-  final orElseCursors = $ref(() => _Context());
+  final thenCursors = $cursor(() => _Context());
+  final orElseCursors = $cursor(() => _Context());
 
   T result;
 
@@ -77,12 +63,12 @@ T $if<T>(bool condition, T then(), {T orElse()}) {
 $EffectHandler get $effect => _handler;
 
 abstract class $Effect {
-  $Ref get at;
+  $Cursor get at;
 }
 
 typedef $EffectHandler = void Function($Effect effect);
 
-abstract class $Ref<T> {
+abstract class $Cursor<T> {
   T get value;
   set value(T newValue);
 
@@ -90,7 +76,7 @@ abstract class $Ref<T> {
   T set(T newValue) => value = newValue;
 }
 
-class _$RefImpl<T> extends $Ref<T> {
+class _$CursorImpl<T> extends $Cursor<T> {
   @override
   T get value => _value;
   @override
@@ -105,19 +91,20 @@ class _$RefImpl<T> extends $Ref<T> {
 }
 
 class _Context {
-  set cursor($Ref status) => _cursor.ref = status;
+  set cursor($Cursor status) => _cursor.cursor = status;
 
-  $Ref get cursor => _cursor.ref;
+  $Cursor get cursor => _cursor.cursor;
 
   void cursorNext() {
-    if (_cursor.next == null) _cursors.add(_$RefInContext(null));
+    if (_cursor.next == null) _cursors.add(_$CursorInContext(null));
     _cursor = _cursor.next;
   }
 
   void cursorReset() => _cursor = _cursors.first;
 
-  _$RefInContext _cursor;
-  final _cursors = LinkedList<_$RefInContext>()..addFirst(_$RefInContext(null));
+  _$CursorInContext _cursor;
+  final _cursors = LinkedList<_$CursorInContext>()
+    ..addFirst(_$CursorInContext(null));
 
   _Context() {
     _cursor = _cursors.first;
@@ -125,10 +112,10 @@ class _Context {
   }
 }
 
-class _$RefInContext extends LinkedListEntry<_$RefInContext> {
-  $Ref ref;
+class _$CursorInContext extends LinkedListEntry<_$CursorInContext> {
+  $Cursor cursor;
 
-  _$RefInContext(this.ref);
+  _$CursorInContext(this.cursor);
 }
 
 _Context _context;
