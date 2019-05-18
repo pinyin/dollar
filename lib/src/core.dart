@@ -3,16 +3,12 @@ import 'package:collection/collection.dart';
 R Function(T) $handle<T, R>(R func(T params), [$EffectHandler handler]) {
   assert(_handler != null || handler != null);
   assert(_handler == null || handler == null);
-  final _Context context =
-      _context == null ? _Context() : $ref(() => _Context()).value;
   handler ??= _handler;
+  func = $(func);
 
   return (T params) {
     // TODO support arbitrary parameters
     // TODO improve performance
-    final prevContext = _context;
-    _context = context;
-    _context.cursorReset();
 
     final prevHandler = _handler;
     _handler = handler;
@@ -21,6 +17,20 @@ R Function(T) $handle<T, R>(R func(T params), [$EffectHandler handler]) {
 
     assert(identical(_handler, handler));
     _handler = prevHandler;
+
+    return result;
+  };
+}
+
+$Effects<T, R> $<T, R>($Effects<T, R> effects) {
+  final _Context context =
+      _context == null ? _Context() : $ref(() => _Context()).value;
+  return (T params) {
+    final prevContext = _context;
+    _context = context;
+    _context.cursorReset();
+
+    final result = effects(params);
 
     assert(identical(_context, context));
     _context = prevContext;
@@ -105,3 +115,5 @@ class _Context {
 _Context _context;
 
 $EffectHandler _handler;
+
+typedef $Effects<T, R> = R Function(T);
