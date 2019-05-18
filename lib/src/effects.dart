@@ -21,6 +21,7 @@ class $UpdateVar<T> extends $Effect {
 }
 
 class $AddListener<T> implements $Effect {
+  final $Ref at;
   final Function(T) callback;
   final Type type;
 
@@ -34,24 +35,11 @@ class $AddListener<T> implements $Effect {
   @override
   int get hashCode => runtimeType.hashCode ^ callback.hashCode;
 
-  $AddListener(this.callback) : type = T;
+  $AddListener(this.callback, this.at) : type = T;
 }
 
-class $RemoveListener<T> implements $Effect {
-  final Function(T) callback;
-  final Type type;
+class $Ended implements $Effect {
+  final $Ref at;
 
-  @override
-  bool operator ==(other) {
-    return other is $RemoveListener<T> &&
-        other.runtimeType == runtimeType &&
-        other.callback == callback;
-  }
-
-  @override
-  int get hashCode => runtimeType.hashCode ^ callback.hashCode;
-
-  $RemoveListener(this.callback) : type = T;
+  $Ended(this.at);
 }
-
-class $Ended implements $Effect {}

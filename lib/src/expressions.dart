@@ -2,13 +2,15 @@ import 'package:collection/collection.dart';
 import 'package:dollar/dollar.dart';
 
 $Var<T> $var<T>(T init()) {
-  final didInit = $ref(() => false);
-  final ref = $ref<$Var<T>>(() => null);
-  $if(!didInit.value, () {
-    ref.value = _$VarImpl(ref, init(), $effect);
-    didInit.value = true;
+  return $(() {
+    final didInit = $ref(() => false);
+    final ref = $ref<$Var<T>>(() => null);
+    $if(!didInit.value, () {
+      ref.value = _$VarImpl(ref, init(), $effect);
+      didInit.value = true;
+    });
+    return ref.value;
   });
-  return ref.value;
 }
 
 T $final<T>(T init()) {
@@ -16,18 +18,20 @@ T $final<T>(T init()) {
 }
 
 T $previous<T>(T value) {
-  final ref = $ref<T>(() => null);
-  final prev = ref.value;
-  ref.value = value;
-  return prev;
+  return $(() {
+    final ref = $ref<T>(() => null);
+    final prev = ref.value;
+    ref.value = value;
+    return prev;
+  });
 }
 
 bool $identical(Object value) {
-  return identical(value, $previous(value));
+  return $(() => identical(value, $previous(value)));
 }
 
 bool $shallowEquals(Iterable values) {
-  return shallowEquals(values, $previous(values));
+  return $(() => shallowEquals(values, $previous(values)));
 }
 
 R $listen<T, R>(R callback(T value)) {
@@ -37,7 +41,7 @@ R $listen<T, R>(R callback(T value)) {
 
   $final(() {
     $effect($AddListener(
-        $handle<T, R>((T event) => result.value = listener.value(event))));
+        $handle((T event) => result.value = listener.value(event)), result));
   });
 
   return result.value;

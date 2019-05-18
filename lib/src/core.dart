@@ -1,42 +1,47 @@
-import 'package:collection/collection.dart';
+import 'dart:collection';
 
 R Function(T) $handle<T, R>(R func(T params), [$EffectHandler handler]) {
-  assert(_handler != null || handler != null);
   assert(_handler == null || handler == null);
+  assert(_handler != null || handler != null);
+
+  final context = _context == null ? _Context() : $ref(() => _Context()).value;
   handler ??= _handler;
-  func = $(func);
 
   return (T params) {
-    // TODO support arbitrary parameters
-    // TODO improve performance
+    context.cursorReset();
 
     final prevHandler = _handler;
+    final prevContext = _context;
+
     _handler = handler;
+    _context = context;
 
     final result = func(params);
 
+    assert(identical(_context, context));
     assert(identical(_handler, handler));
+
+    _context = prevContext;
     _handler = prevHandler;
 
     return result;
   };
 }
 
-$Effects<T, R> $<T, R>($Effects<T, R> effects) {
-  final _Context context =
-      _context == null ? _Context() : $ref(() => _Context()).value;
-  return (T params) {
-    final prevContext = _context;
-    _context = context;
-    _context.cursorReset();
+T $<T>(T effects()) {
+  final context = $ref(() => _Context()).value;
+  context.cursorReset();
+  final lastEffects = $ref(() => effects);
+  lastEffects.value = effects;
 
-    final result = effects(params);
+  // TODO automatically skip
+  final prevContext = _context;
+  _context = context;
+  final result = lastEffects.value();
+  assert(identical(_context, context));
+  _context = prevContext;
 
-    assert(identical(_context, context));
-    _context = prevContext;
-
-    return result;
-  };
+  return result;
 }
 
 $Ref<T> $ref<T>(T init()) {
@@ -70,7 +75,9 @@ T $if<T>(bool condition, T then(), {T orElse()}) {
 
 $EffectHandler get $effect => _handler;
 
-abstract class $Effect {}
+abstract class $Effect {
+  $Ref get at;
+}
 
 typedef $EffectHandler = void Function($Effect effect);
 
@@ -97,19 +104,30 @@ class _$RefImpl<T> extends $Ref<T> {
 }
 
 class _Context {
-  set cursor($Ref status) => _cursor == _cursors.length
-      ? _cursors.addLast(status)
-      : _cursors[_cursor] = status;
+  set cursor($Ref status) => _cursor.ref = status;
 
-  $Ref get cursor =>
-      _cursors.length > _cursor ? _cursors.elementAt(_cursor) : null;
+  $Ref get cursor => _cursor.ref;
 
-  void cursorNext() => _cursor++;
+  void cursorNext() {
+    if (_cursor.next == null) _cursors.add(_$RefInContext(null));
+    _cursor = _cursor.next;
+  }
 
-  void cursorReset() => _cursor = 0;
+  void cursorReset() => _cursor = _cursors.first;
 
-  int _cursor = 0;
-  QueueList<$Ref> _cursors = QueueList();
+  _$RefInContext _cursor;
+  final _cursors = LinkedList<_$RefInContext>()..addFirst(_$RefInContext(null));
+
+  _Context() {
+    _cursor = _cursors.first;
+    assert(_cursor != null);
+  }
+}
+
+class _$RefInContext extends LinkedListEntry<_$RefInContext> {
+  $Ref ref;
+
+  _$RefInContext(this.ref);
 }
 
 _Context _context;
