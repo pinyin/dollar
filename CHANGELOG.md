@@ -5,5 +5,4 @@
 ## 0.0.2
 
 - Add TravisCI support.
-- Rename `$cursor` to `$ref`.
-- Add `$var`, `$final`, `$previous`, `$identical`, `$shallowEquals`.
+- Add multiple extensions.

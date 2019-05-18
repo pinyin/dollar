@@ -1,5 +1,4 @@
 import 'package:dollar/dollar.dart';
-import 'package:dollar/src/expressions.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -212,11 +211,6 @@ void main() {
         expect(result, 2);
         expect(closeCount, 2);
       });
-    });
-  });
-  group('handlers', () {
-    group('transformWith', () {
-      test('', () {});
     });
   });
 }

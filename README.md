@@ -13,13 +13,13 @@ Inspired by hooks in React.
 import 'package:dollar/dollar.dart';
 
 final func = $handle((bool input) {
-  final a = $ref(() => 1);
+  final a = $cursor(() => 1).value;
   final b = $if(input, () {
-    return $ref(() => 2);
-  }, orElse: ()=> $ref(()=> 3));
+    return $cursor(() => 2);
+  }, orElse: ()=> $cursor(()=> 3)).value;
   a.value ++; 
   b.value --;
-  // use a & b 
+  // a.value & b.value will be kept across calls
 }, (_) {});
 // values of a & b will be kept across different calls
 func(true);

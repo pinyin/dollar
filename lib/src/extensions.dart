@@ -4,11 +4,9 @@ import 'package:dollar/dollar.dart';
 $Var<T> $var<T>(T init()) {
   final didInit = $cursor(() => false);
   final cursor = $cursor<$Var<T>>(() => null);
-  final onUpdate = $handle((T to) {
-    $effect((_) => $UpdateVar(to, cursor));
-  });
   $if(!didInit.value, () {
-    cursor.value = _$VarImpl(init(), onUpdate);
+    cursor.value = _$VarImpl(
+        init(), $handle((T to) => $effect((_) => $UpdateVar(to, cursor))));
     didInit.value = true;
   });
   return cursor.value;
@@ -34,7 +32,7 @@ bool $equals(Object value) {
 }
 
 bool $shallowEquals(Iterable values) {
-  return shallowEquals(values, $previous(values));
+  return _shallowEquals(values, $previous(values));
 }
 
 T $fork<T>(void Function() work($Var<T> result)) {
@@ -44,7 +42,7 @@ T $fork<T>(void Function() work($Var<T> result)) {
   $if(cleanup.value != null, cleanup.value);
   cleanup.value = work(result);
 
-  $listen(($End _) => cleanup.value());
+  $final(() => $listen(($End _) => cleanup.value()));
 
   return result.value;
 }
@@ -85,4 +83,42 @@ class _$VarImpl<T> extends $Var<T> {
         _onUpdate = onUpdate;
 }
 
-final shallowEquals = const IterableEquality().equals;
+class $UpdateVar<T> extends $Effect {
+  final T to;
+  final $Cursor at;
+
+  @override
+  bool operator ==(other) {
+    return other is $UpdateVar<T> &&
+        other.runtimeType == runtimeType &&
+        other.to == to &&
+        other.at == at;
+  }
+
+  @override
+  int get hashCode => to.hashCode;
+
+  $UpdateVar(this.to, this.at);
+}
+
+class $AddListener<T> implements $Effect {
+  final $Cursor at;
+  final Function(T) callback;
+  final Type type;
+
+  @override
+  bool operator ==(other) {
+    return other is $AddListener<T> &&
+        other.runtimeType == runtimeType &&
+        other.callback == callback;
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode ^ callback.hashCode;
+
+  $AddListener(this.callback, this.at) : type = T;
+}
+
+class $End {}
+
+final _shallowEquals = const IterableEquality().equals;

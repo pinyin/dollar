@@ -4,6 +4,7 @@ R Function(T) $handle<T, R>(R func(T params), [$EffectHandler handler]) {
   assert(_handler == null || handler == null);
   assert(_handler != null || handler != null);
   // TODO support multiple handler
+  // TODO support function with arbitrary signature
 
   final context =
       _context == null ? _Context() : $cursor(() => _Context()).value;
