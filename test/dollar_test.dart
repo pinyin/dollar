@@ -124,6 +124,18 @@ void main() {
       });
     });
 
+    group('equals', () {
+      test('should compare value and previous value', () {
+        final func = $handle((value) {
+          return $equals(value);
+        }, (_) {});
+        expect(func(1), false);
+        expect(func(2), false);
+        expect(func(2), true);
+        expect(func(1), false);
+      });
+    });
+
     group('shallowEquals', () {
       test('should compare value and previous value', () {
         final func = $handle((value) {
@@ -165,6 +177,35 @@ void main() {
         (effects[0] as $AddListener<int>).callback(1);
         func(null);
         expect(result, 1);
+      });
+    });
+
+    group('fork', () {
+      test('should run one instance of work', () {
+        final effects = [];
+        var closeCount = 0;
+        final listener = ($Var<int> value) {
+          value.value ??= 0;
+          value.value++;
+          return () {
+            closeCount++;
+          };
+        };
+        var result = 0;
+        final func = $handle((input) {
+          $if(!$identical(input), () {
+            result = $fork(listener);
+          });
+        }, effects.add);
+        func(0);
+        expect(result, 1);
+        expect(closeCount, 0);
+        func(1);
+        expect(result, 2);
+        expect(closeCount, 1);
+        func(1);
+        expect(result, 2);
+        expect(closeCount, 1);
       });
     });
   });

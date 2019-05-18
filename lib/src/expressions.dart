@@ -29,8 +29,22 @@ bool $identical(Object value) {
   return identical(value, $previous(value));
 }
 
+bool $equals(Object value) {
+  return value == $previous(value);
+}
+
 bool $shallowEquals(Iterable values) {
   return shallowEquals(values, $previous(values));
+}
+
+T $fork<T>(void Function() work($Var<T> result)) {
+  final result = $var<T>(() => null);
+  final cleanup = $cursor<void Function()>(() => null);
+
+  $if(cleanup.value != null, cleanup.value);
+  cleanup.value = work(result);
+
+  return result.value;
 }
 
 R $listen<T, R>(R callback(T value)) {
