@@ -1,5 +1,5 @@
 import 'package:dollar/dollar.dart';
-import 'package:dollar/src/effects.dart';
+import 'package:dollar/src/expressions.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -84,7 +84,7 @@ void main() {
     });
   });
 
-  group('effects', () {
+  group('expressions', () {
     group('var', () {
       test('should emit VarEffect', () {
         final effects = <$UpdateVar>[];
@@ -103,38 +103,39 @@ void main() {
       });
     });
 
-    group('scan', () {
-      test('should run work when keys are updated', () {
-        int runCount = 0;
-        $Ref keyRef;
-        final func = $handle((_) {
-          keyRef = $ref(() => 0);
-          $scan((_) {
-            return runCount++;
-          }, [keyRef.value]);
+    group('previous', () {
+      test('should provide previous value', () {
+        final func = $handle((value) {
+          return $previous(value);
         }, (_) {});
-        func(null);
-        expect(runCount, 1);
-        func(null);
-        expect(runCount, 1);
-        keyRef.value++;
-        func(null);
-        expect(runCount, 2);
-        func(null);
-        expect(runCount, 2);
+        expect(func(1), null);
+        expect(func(2), 1);
+        expect(func(3), 2);
       });
-      test('should provide value to next scan', () {
-        int fibonacci = 0;
-        final func = $handle((_) {
-          return $scan<int>((prev) {
-            prev ??= 1;
-            return prev + fibonacci;
-          }, [fibonacci]);
+    });
+
+    group('identical', () {
+      test('should compare value and previous value', () {
+        final func = $handle((value) {
+          return $identical(value);
         }, (_) {});
-        fibonacci = func(null);
-        expect(fibonacci, 1);
-        fibonacci = func(null);
-        expect(fibonacci, 2);
+        expect(func(1), false);
+        expect(func(2), false);
+        expect(func(2), true);
+        expect(func(1), false);
+      });
+    });
+
+    group('shallowEquals', () {
+      test('should compare value and previous value', () {
+        final func = $handle((value) {
+          return $shallowEquals(value);
+        }, (_) {});
+        expect(func([1]), false);
+        expect(func([2]), false);
+        expect(func([2, 2]), false);
+        expect(func([2, 2]), true);
+        expect(func([1]), false);
       });
     });
 
@@ -175,6 +176,11 @@ void main() {
         expect(result, 2);
         expect(effects.length, 1);
       });
+    });
+  });
+  group('handlers', () {
+    group('transformWith', () {
+      test('', () {});
     });
   });
 }

@@ -6,4 +6,4 @@
 
 - Add TravisCI support.
 - Rename `$cursor` to `$ref`.
-- Add `$var` and `$scan`.
+- Add `$var`, `$final`, `$previous`, `$identical`, `$shallowEquals`.
