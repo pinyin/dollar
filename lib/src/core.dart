@@ -60,13 +60,17 @@ T $if<T>(bool condition, T then(), {T orElse()}) {
   return result;
 }
 
-$EffectHandler get $effect => _handler;
+T $effect<T>($Effect createEffect($Cursor cursor)) {
+  final cursor = $cursor<T>(() => null);
+  cursor.value = _handler(createEffect(cursor));
+  return cursor.value;
+}
 
 abstract class $Effect {
   $Cursor get at;
 }
 
-typedef $EffectHandler = void Function($Effect effect);
+typedef $EffectHandler = Object Function($Effect effect);
 
 abstract class $Cursor<T> {
   T get value;

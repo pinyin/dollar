@@ -1,7 +1,6 @@
 import 'package:dollar/dollar.dart';
 
 class $UpdateVar<T> extends $Effect {
-  final T from;
   final T to;
   final $Cursor at;
 
@@ -9,15 +8,14 @@ class $UpdateVar<T> extends $Effect {
   bool operator ==(other) {
     return other is $UpdateVar<T> &&
         other.runtimeType == runtimeType &&
-        other.from == from &&
         other.to == to &&
         other.at == at;
   }
 
   @override
-  int get hashCode => from.hashCode ^ to.hashCode;
+  int get hashCode => to.hashCode;
 
-  $UpdateVar(this.from, this.to, this.at);
+  $UpdateVar(this.to, this.at);
 }
 
 class $AddListener<T> implements $Effect {

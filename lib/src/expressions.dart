@@ -3,12 +3,15 @@ import 'package:dollar/dollar.dart';
 
 $Var<T> $var<T>(T init()) {
   final didInit = $cursor(() => false);
-  final ref = $cursor<$Var<T>>(() => null);
+  final cursor = $cursor<$Var<T>>(() => null);
+  final onUpdate = $handle((T to) {
+    $effect((_) => $UpdateVar(to, cursor));
+  });
   $if(!didInit.value, () {
-    ref.value = _$VarImpl(ref, init(), $effect);
+    cursor.value = _$VarImpl(init(), onUpdate);
     didInit.value = true;
   });
-  return ref.value;
+  return cursor.value;
 }
 
 T $final<T>(T init()) {
@@ -16,9 +19,9 @@ T $final<T>(T init()) {
 }
 
 T $previous<T>(T value) {
-  final ref = $cursor<T>(() => null);
-  final prev = ref.value;
-  ref.value = value;
+  final cursor = $cursor<T>(() => null);
+  final prev = cursor.value;
+  cursor.value = value;
   return prev;
 }
 
@@ -31,15 +34,12 @@ bool $shallowEquals(Iterable values) {
 }
 
 R $listen<T, R>(R callback(T value)) {
-  final listener = $cursor<R Function(T)>(() => callback);
-  listener.value = callback;
+  final latestCallback = $cursor<R Function(T)>(() => callback);
+  latestCallback.value = callback;
   final result = $cursor<R>(() => null);
-
-  $final(() {
-    $effect($AddListener(
-        $handle((T event) => result.value = listener.value(event)), result));
-  });
-
+  final listener =
+      $handle((T event) => result.value = latestCallback.value(event));
+  $effect((cursor) => $AddListener(listener, cursor));
   return result.value;
 }
 
@@ -57,19 +57,16 @@ class _$VarImpl<T> extends $Var<T> {
 
   @override
   set value(T newValue) {
-    final effect = $UpdateVar(_value, newValue, _ref);
     _value = newValue;
-    _$effect(effect);
+    _onUpdate(newValue);
   }
 
-  $Cursor _ref;
   T _value;
-  $EffectHandler _$effect;
+  void Function(T to) _onUpdate;
 
-  _$VarImpl($Cursor ref, T value, $EffectHandler $effect)
-      : _ref = ref,
-        _value = value,
-        _$effect = $effect;
+  _$VarImpl(T value, void onUpdate(T to))
+      : _value = value,
+        _onUpdate = onUpdate;
 }
 
 final shallowEquals = const IterableEquality().equals;

@@ -8,29 +8,29 @@ void main() {
       test('should forward effects to handler', () {
         final effects = <_MockEffect>[];
         final func = $handle((_) {
-          $effect(_MockEffect($cursor(() => 1)));
-          $effect(_MockEffect($cursor(() => 2)));
+          $effect((cursor) => _MockEffect(1, cursor));
+          $effect((cursor) => _MockEffect(2, cursor));
         }, effects.add);
         expect(effects, []);
         func(null);
-        expect(effects.map((e) => e.at.value), [1, 2]);
+        expect(effects.map((e) => e.value), [1, 2]);
       });
       test('should create new ref context', () {
         final effects = <_MockEffect>[];
         final func = $handle((_) {
-          $effect(_MockEffect($cursor(() => 1)));
-          $effect(_MockEffect($cursor(() => 2)));
+          $effect((cursor) => _MockEffect(1, cursor));
+          $effect((cursor) => _MockEffect(2, cursor));
           $handle((_) {
-            $effect(_MockEffect($cursor(() => 3)));
-            $effect(_MockEffect($cursor(() => 4)));
+            $effect((cursor) => _MockEffect(3, cursor));
+            $effect((cursor) => _MockEffect(4, cursor));
           })(null);
         }, effects.add);
         expect(effects, []);
         func(null);
-        expect(effects.map((e) => e.at.value), [1, 2, 3, 4]);
+        expect(effects.map((e) => e.value), [1, 2, 3, 4]);
         effects.clear();
         func(null);
-        expect(effects.map((e) => e.at.value), [1, 2, 3, 4]);
+        expect(effects.map((e) => e.value), [1, 2, 3, 4]);
       });
     });
     group('ref', () {
@@ -93,12 +93,10 @@ void main() {
         }, effects.add);
         var v = func(null);
         v.value = 2;
-        expect(effects[0].from, 1);
         expect(effects[0].to, 2);
         effects.clear();
         v = func(null);
         v.value = 3;
-        expect(effects[0].from, 2);
         expect(effects[0].to, 3);
       });
     });
@@ -141,7 +139,7 @@ void main() {
 
     group('listen', () {
       test('should emit listener event', () {
-        final effects = [];
+        final effects = <$Effect>[];
         final listener = (int i) {
           return;
         };
@@ -150,8 +148,7 @@ void main() {
         }, effects.add);
         func(null);
         func(null);
-        expect(effects.length, 1);
-        expect(effects[0] is $AddListener<int>, true);
+        expect(effects[0].at, effects[1].at);
       });
       test('should wrap callback into an effect', () {
         final effects = [];
@@ -164,17 +161,10 @@ void main() {
           result = $listen(listener);
         }, effects.add);
         func(null);
-        func(null);
-        expect(effects.length, 1);
         expect(effects[0] is $AddListener<int>, true);
         (effects[0] as $AddListener<int>).callback(1);
         func(null);
         expect(result, 1);
-        expect(effects.length, 1);
-        (effects[0] as $AddListener<int>).callback(1);
-        func(null);
-        expect(result, 2);
-        expect(effects.length, 1);
       });
     });
   });
@@ -187,6 +177,7 @@ void main() {
 
 class _MockEffect<T> implements $Effect {
   final $Cursor<T> at;
+  final T value;
 
-  _MockEffect(this.at);
+  _MockEffect(this.value, this.at);
 }
