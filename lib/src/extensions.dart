@@ -35,25 +35,26 @@ bool $shallowEquals(Iterable values) {
   return _shallowEquals(values, $previous(values));
 }
 
-T $fork<T>(void Function() work($Var<T> result)) {
+T $fork<T>($Effects<$Var<T>, Function()> work) {
   final result = $var<T>(() => null);
-  final cleanup = $cursor<void Function()>(() => null);
+  final cleanup = $cursor<Function()>(() => null);
+  final maybeCleanup = () => $if(cleanup.value != null, cleanup.value);
 
-  $if(cleanup.value != null, cleanup.value);
+  maybeCleanup();
   cleanup.value = work(result);
 
-  $final(() => $listen(($End _) => cleanup.value()));
+  $listen(($End _) => maybeCleanup());
 
   return result.value;
 }
 
-R $listen<T, R>(R callback(T value)) {
-  final latestCallback = $cursor<R Function(T)>(() => callback);
+R $listen<T, R>($Effects<T, R> callback) {
+  final latestCallback = $cursor(() => callback);
   latestCallback.value = callback;
   final result = $cursor<R>(() => null);
   final listener =
       $handle((T event) => result.value = latestCallback.value(event));
-  $effect((cursor) => $AddListener(listener, cursor));
+  $final(() => $effect((cursor) => $AddListener(listener, cursor)));
   return result.value;
 }
 
@@ -76,9 +77,9 @@ class _$VarImpl<T> extends $Var<T> {
   }
 
   T _value;
-  void Function(T to) _onUpdate;
+  $Effects<T, void> _onUpdate;
 
-  _$VarImpl(T value, void onUpdate(T to))
+  _$VarImpl(T value, $Effects<T, void> onUpdate)
       : _value = value,
         _onUpdate = onUpdate;
 }
@@ -103,7 +104,7 @@ class $UpdateVar<T> extends $Effect {
 
 class $AddListener<T> implements $Effect {
   final $Cursor at;
-  final Function(T) callback;
+  final $Effects<T, void> callback;
   final Type type;
 
   @override

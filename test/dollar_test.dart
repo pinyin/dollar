@@ -159,7 +159,8 @@ void main() {
         }, effects.add);
         func(null);
         func(null);
-        expect(effects[0].at, effects[1].at);
+        expect(effects.length, 1);
+        expect(effects[0] is $AddListener<int>, true);
       });
       test('should wrap callback into an effect', () {
         final effects = [];
