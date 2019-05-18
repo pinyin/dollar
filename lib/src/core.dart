@@ -28,20 +28,21 @@ R Function(T) $handle<T, R>(R func(T params), [$EffectHandler handler]) {
   };
 }
 
-T $<T>(T effects()) {
+T $cursor<T>(T effects()) {
   final context = $ref(() => _Context()).value;
   context.cursorReset();
   final lastEffects = $ref(() => effects);
   lastEffects.value = effects;
+  final result = $ref<T>(() => null);
 
   // TODO automatically skip
   final prevContext = _context;
   _context = context;
-  final result = lastEffects.value();
+  result.value = lastEffects.value();
   assert(identical(_context, context));
   _context = prevContext;
 
-  return result;
+  return result.value;
 }
 
 $Ref<T> $ref<T>(T init()) {

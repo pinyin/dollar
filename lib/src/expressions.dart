@@ -2,7 +2,7 @@ import 'package:collection/collection.dart';
 import 'package:dollar/dollar.dart';
 
 $Var<T> $var<T>(T init()) {
-  return $(() {
+  return $cursor(() {
     final didInit = $ref(() => false);
     final ref = $ref<$Var<T>>(() => null);
     $if(!didInit.value, () {
@@ -18,7 +18,7 @@ T $final<T>(T init()) {
 }
 
 T $previous<T>(T value) {
-  return $(() {
+  return $cursor(() {
     final ref = $ref<T>(() => null);
     final prev = ref.value;
     ref.value = value;
@@ -27,24 +27,26 @@ T $previous<T>(T value) {
 }
 
 bool $identical(Object value) {
-  return $(() => identical(value, $previous(value)));
+  return $cursor(() => identical(value, $previous(value)));
 }
 
 bool $shallowEquals(Iterable values) {
-  return $(() => shallowEquals(values, $previous(values)));
+  return $cursor(() => shallowEquals(values, $previous(values)));
 }
 
 R $listen<T, R>(R callback(T value)) {
-  final listener = $ref<R Function(T)>(() => callback);
-  listener.value = callback;
-  final result = $ref<R>(() => null);
+  return $cursor(() {
+    final listener = $ref<R Function(T)>(() => callback);
+    listener.value = callback;
+    final result = $ref<R>(() => null);
 
-  $final(() {
-    $effect($AddListener(
-        $handle((T event) => result.value = listener.value(event)), result));
+    $final(() {
+      $effect($AddListener(
+          $handle((T event) => result.value = listener.value(event)), result));
+    });
+
+    return result.value;
   });
-
-  return result.value;
 }
 
 abstract class $Var<T> {
