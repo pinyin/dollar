@@ -182,7 +182,7 @@ void main() {
 
     group('fork', () {
       test('should run one instance of work', () {
-        final effects = [];
+        final effects = <$Effect>[];
         var closeCount = 0;
         final listener = ($Var<int> value) {
           value.value ??= 0;
@@ -206,6 +206,11 @@ void main() {
         func(1);
         expect(result, 2);
         expect(closeCount, 1);
+        (effects.where((e) => e is $AddListener<$End>).first
+                as $AddListener<$End>)
+            .callback($End());
+        expect(result, 2);
+        expect(closeCount, 2);
       });
     });
   });

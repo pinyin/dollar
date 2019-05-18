@@ -44,6 +44,8 @@ T $fork<T>(void Function() work($Var<T> result)) {
   $if(cleanup.value != null, cleanup.value);
   cleanup.value = work(result);
 
+  $listen(($End _) => cleanup.value());
+
   return result.value;
 }
 

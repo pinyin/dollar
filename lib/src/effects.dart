@@ -36,8 +36,4 @@ class $AddListener<T> implements $Effect {
   $AddListener(this.callback, this.at) : type = T;
 }
 
-class $Ended implements $Effect {
-  final $Cursor at;
-
-  $Ended(this.at);
-}
+class $End {}
