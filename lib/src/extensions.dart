@@ -17,11 +17,10 @@ $Var<T> $var<T>(T init()) {
   return cursor.value;
 }
 
-T $final<T>(T init(), [bool keep()]) {
+T $final<T>(T init(), [bool keep = true]) {
   final didInit = $cursor(() => false);
   final cursor = $cursor<T>(() => null);
-  final shouldKeep = $if(keep != null, () => keep(), orElse: () => true);
-  $if(!didInit.value || !shouldKeep, () {
+  $if(!didInit.value || !keep, () {
     cursor.value = init();
     didInit.value = true;
   });
@@ -39,22 +38,24 @@ R $diff<T, R>(T value, R diff(T prev, T curr)) {
   return diff($prev(value), value);
 }
 
-T $scan<T>(T compute(T prev), bool skip()) {
+T $scan<T>(T compute(T prev), [bool keep = false]) {
   final cursor = $cursor<T>(() => null);
-  $if(!skip(), () {
+  $if(!keep, () {
     cursor.value = compute(cursor.value);
   });
   return cursor.value;
 }
 
-T $fork<T>($Effects<$Cursor<T>, Function()> work) {
+T $fork<T>($Effects<$Cursor<T>, Function()> work, [bool keep = false]) {
   final result = $cursor<T>(() => null);
-  final cleanup = $ref($prev(work(result)));
+  final cleanup = $cursor<Function()>(() => null);
 
-  final maybeCleanup = () => $if(cleanup.value != null, cleanup.value);
-
-  maybeCleanup();
-  $listen(($End _) => maybeCleanup());
+  $if(cleanup.value == null || !keep, () {
+    final maybeCleanup = () => $if(cleanup.value != null, cleanup.value);
+    maybeCleanup();
+    cleanup.value = work(result);
+    $listen(($End _) => maybeCleanup());
+  });
 
   return result.value;
 }

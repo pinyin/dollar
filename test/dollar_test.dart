@@ -117,7 +117,7 @@ void main() {
       test('should keep value when second parameter is true', () {
         var value = 0;
         final func = $bind((keep) {
-          return $final(() => ++value, () => keep);
+          return $final(() => ++value, keep);
         }, (_) {});
         expect(func(true), 1);
         expect(func(true), 1);
@@ -155,7 +155,7 @@ void main() {
     group('scan', () {
       test('should compute value based on previous value', () {
         final func = $bind((skip) {
-          return $scan((prev) => (prev ?? 0) + 1, () => skip);
+          return $scan((prev) => (prev ?? 0) + 1, skip);
         }, (_) {});
         expect(func(true), null);
         expect(func(false), 1);
@@ -210,18 +210,16 @@ void main() {
           };
         };
         var result = 0;
-        final func = $bind((input) {
-          $if(!$diff(input, identical), () {
-            result = $fork(listener);
-          });
+        final func = $bind((bool keep) {
+          result = $fork(listener, keep);
         }, $combineHandlers([$listenAt(listeners), effects.add]));
-        func(0);
+        func(true);
         expect(result, 1);
         expect(closeCount, 0);
-        func(1);
+        func(false);
         expect(result, 2);
         expect(closeCount, 1);
-        func(1);
+        func(true);
         expect(result, 2);
         expect(closeCount, 1);
         (effects.where((e) => e is $AddListener<$End>).first
