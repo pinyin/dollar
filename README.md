@@ -33,4 +33,5 @@ func(false);
 
 ```
 
+See tests for more examples.
 

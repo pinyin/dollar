@@ -1,6 +1,6 @@
 name: dollar
-description: Write side effects in sync functions.
-version: 0.0.2
+description: Write async side effects in sync functions.
+version: 0.0.3
 homepage: https://github.com/pinyin/dollar
 author: Bo Bao <bob432091@gmail.com>
 
