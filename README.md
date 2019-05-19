@@ -12,7 +12,7 @@ Inspired by hooks in React.
 
 import 'package:dollar/dollar.dart';
 
-final func = $handle((bool input) {
+final func = $bind((bool input) {
   final a = $cursor(() => 1).value;
   final b = $if(input, () {
     return $cursor(() => 2);

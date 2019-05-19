@@ -114,10 +114,21 @@ void main() {
     });
 
     group('final', () {
-      test('should keep value when second parameter is true', () {
+      test('should keep value', () {
+        var value = 0;
+        final func = $bind((_) {
+          return $final(() => ++value);
+        }, (_) {});
+        expect(func(null), 1);
+        expect(func(null), 1);
+      });
+    });
+
+    group('cache', () {
+      test('should return cached value iff second parameter is true', () {
         var value = 0;
         final func = $bind((keep) {
-          return $final(() => ++value, keep);
+          return $cache(() => ++value, keep);
         }, (_) {});
         expect(func(true), 1);
         expect(func(true), 1);
@@ -154,14 +165,12 @@ void main() {
 
     group('scan', () {
       test('should compute value based on previous value', () {
-        final func = $bind((skip) {
-          return $scan((prev) => (prev ?? 0) + 1, skip);
+        final func = $bind((_) {
+          return $scan((prev) => (prev ?? 0) + 1);
         }, (_) {});
-        expect(func(true), null);
-        expect(func(false), 1);
-        expect(func(false), 2);
-        expect(func(true), 2);
-        expect(func(true), 2);
+        expect(func(null), 1);
+        expect(func(null), 2);
+        expect(func(null), 3);
       });
     });
 
@@ -210,16 +219,13 @@ void main() {
           };
         };
         var result = 0;
-        final func = $bind((bool keep) {
-          result = $fork(listener, keep);
+        final func = $bind((_) {
+          result = $fork(listener);
         }, $combineHandlers([$listenAt(listeners), effects.add]));
-        func(true);
+        func(null);
         expect(result, 1);
         expect(closeCount, 0);
-        func(false);
-        expect(result, 2);
-        expect(closeCount, 1);
-        func(true);
+        func(null);
         expect(result, 2);
         expect(closeCount, 1);
         (effects.where((e) => e is $AddListener<$End>).first
