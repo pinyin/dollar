@@ -193,10 +193,10 @@ void main() {
         var result = 0;
         final listener = (int i) {
           final callCount = $cursor(() => 0);
-          return callCount.value += i;
+          result = callCount.value += i;
         };
         final func = $bind((_) {
-          result = $listen(listener);
+          $listen(listener);
         }, effects.add);
         func(null);
         expect(effects[0] is $AddListener<int>, true);

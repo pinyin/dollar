@@ -57,13 +57,10 @@ void $fork(Function() work()) {
   $listen(($End _) => maybeCleanup());
 }
 
-R $listen<T, R>($Effects<T, R> callback) {
+void $listen<T>(void callback(T event)) {
   final latestCallback = $ref(callback);
-  final result = $cursor<R>(() => null);
-  final listener =
-      $bind((T event) => result.value = latestCallback.value(event));
+  final listener = $bind((T event) => latestCallback.value(event));
   $effect((cursor) => $AddListener(listener, cursor));
-  return result.value;
 }
 
 abstract class $Ref<T> {
