@@ -11,8 +11,15 @@ $Var<T> $var<T>(T init()) {
   return cursor.value;
 }
 
-T $final<T>(T init()) {
-  return $var(init).value;
+T $final<T>(T init(), [bool keep(T prev)]) {
+  final didInit = $cursor(() => false);
+  final cursor = $cursor<T>(() => null);
+  final shouldRecompute = keep != null && !keep(cursor.value);
+  $if(!didInit.value || shouldRecompute, () {
+    cursor.value = init();
+    didInit.value = true;
+  });
+  return cursor.value;
 }
 
 T $previous<T>(T value) {

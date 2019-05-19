@@ -7,8 +7,5 @@ author: Bo Bao <bob432091@gmail.com>
 environment:
   sdk: '>=2.2.0 <3.0.0'
 
-dependencies:
-  collection: ^1.14.11
-
 dev_dependencies:
   test: ^1.0.0

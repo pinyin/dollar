@@ -83,7 +83,7 @@ void main() {
     });
   });
 
-  group('expressions', () {
+  group('extensions', () {
     group('var', () {
       test('should emit VarEffect', () {
         final effects = <$UpdateVar>[];
@@ -97,6 +97,20 @@ void main() {
         v = func(null);
         v.value = 3;
         expect(effects[0].to, 3);
+      });
+    });
+
+    group('final', () {
+      test('should keep value when second parameter is true', () {
+        var value = 0;
+        final func = $bind((keep) {
+          return $final(() => ++value, (_) => keep);
+        }, (_) {});
+        expect(func(true), 1);
+        expect(func(true), 1);
+        expect(func(false), 2);
+        expect(func(false), 3);
+        expect(func(true), 3);
       });
     });
 
