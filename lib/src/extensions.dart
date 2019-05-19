@@ -17,10 +17,11 @@ T $final<T>(T init()) {
 }
 
 T $previous<T>(T value) {
-  final cursor = $cursor<T>(() => null);
-  final prev = cursor.value;
-  cursor.value = value;
-  return prev;
+  final curr = $cursor<T>(() => null);
+  curr.value = value;
+  final prev = $cursor<T>(() => null);
+  $listen(($Pass _) => prev.value = curr.value);
+  return prev.value;
 }
 
 bool $identical(Object value) {
@@ -104,7 +105,7 @@ class $UpdateVar<T> extends $Effect {
 
 class $AddListener<T> implements $Effect {
   final $Cursor at;
-  final $Effects<T, void> callback;
+  final Function callback;
   final Type type;
 
   @override
@@ -117,8 +118,12 @@ class $AddListener<T> implements $Effect {
   @override
   int get hashCode => runtimeType.hashCode ^ callback.hashCode;
 
-  $AddListener(this.callback, this.at) : type = T;
+  $AddListener(Function(T) callback, this.at)
+      : callback = callback,
+        type = T;
 }
+
+class $Pass {}
 
 class $End {}
 

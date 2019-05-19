@@ -102,48 +102,64 @@ void main() {
 
     group('previous', () {
       test('should provide previous value', () {
+        final listeners = $Listeners();
         final func = $handle((value) {
           return $previous(value);
-        }, (_) {});
+        }, $listenAt(listeners));
         expect(func(1), null);
+        listeners.trigger($Pass());
         expect(func(2), 1);
+        listeners.trigger($Pass());
         expect(func(3), 2);
       });
     });
 
     group('identical', () {
       test('should compare value and previous value', () {
+        final listeners = $Listeners();
         final func = $handle((value) {
           return $identical(value);
-        }, (_) {});
+        }, $listenAt(listeners));
         expect(func(1), false);
+        listeners.trigger($Pass());
         expect(func(2), false);
+        listeners.trigger($Pass());
         expect(func(2), true);
+        listeners.trigger($Pass());
         expect(func(1), false);
       });
     });
 
     group('equals', () {
       test('should compare value and previous value', () {
+        final listeners = $Listeners();
         final func = $handle((value) {
           return $equals(value);
-        }, (_) {});
+        }, $listenAt(listeners));
         expect(func(1), false);
+        listeners.trigger($Pass());
         expect(func(2), false);
+        listeners.trigger($Pass());
         expect(func(2), true);
+        listeners.trigger($Pass());
         expect(func(1), false);
       });
     });
 
     group('shallowEquals', () {
       test('should compare value and previous value', () {
+        final listeners = $Listeners();
         final func = $handle((value) {
           return $shallowEquals(value);
-        }, (_) {});
+        }, $listenAt(listeners));
         expect(func([1]), false);
+        listeners.trigger($Pass());
         expect(func([2]), false);
+        listeners.trigger($Pass());
         expect(func([2, 2]), false);
+        listeners.trigger($Pass());
         expect(func([2, 2]), true);
+        listeners.trigger($Pass());
         expect(func([1]), false);
       });
     });
@@ -183,6 +199,7 @@ void main() {
     group('fork', () {
       test('should run one instance of work', () {
         final effects = <$Effect>[];
+        final listeners = $Listeners();
         var closeCount = 0;
         final listener = ($Var<int> value) {
           value.value ??= 0;
@@ -196,13 +213,15 @@ void main() {
           $if(!$identical(input), () {
             result = $fork(listener);
           });
-        }, effects.add);
+        }, $combineHandlers([$listenAt(listeners), effects.add]));
         func(0);
         expect(result, 1);
         expect(closeCount, 0);
+        listeners.trigger($Pass());
         func(1);
         expect(result, 2);
         expect(closeCount, 1);
+        listeners.trigger($Pass());
         func(1);
         expect(result, 2);
         expect(closeCount, 1);
