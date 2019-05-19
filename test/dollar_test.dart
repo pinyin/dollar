@@ -6,7 +6,7 @@ void main() {
     group('handle', () {
       test('should forward effects to handler', () {
         final effects = <_MockEffect>[];
-        final func = $handle((_) {
+        final func = $bind((_) {
           $effect((cursor) => _MockEffect(1, cursor));
           $effect((cursor) => _MockEffect(2, cursor));
         }, effects.add);
@@ -16,10 +16,10 @@ void main() {
       });
       test('should create new ref context', () {
         final effects = <_MockEffect>[];
-        final func = $handle((_) {
+        final func = $bind((_) {
           $effect((cursor) => _MockEffect(1, cursor));
           $effect((cursor) => _MockEffect(2, cursor));
-          $handle((_) {
+          $bind((_) {
             $effect((cursor) => _MockEffect(3, cursor));
             $effect((cursor) => _MockEffect(4, cursor));
           })(null);
@@ -35,7 +35,7 @@ void main() {
     group('ref', () {
       test('should keep updates across calls', () {
         $Cursor<int> ref;
-        final func = $handle((_) {
+        final func = $bind((_) {
           ref = $cursor(() => 1);
           $cursor(() => 2);
         }, (effect) {});
@@ -48,7 +48,7 @@ void main() {
     });
     group('if', () {
       test('should return value in path', () {
-        final func = $handle((bool input) {
+        final func = $bind((bool input) {
           return $if(input, () {
             return 1;
           }, orElse: () => 2);
@@ -59,7 +59,7 @@ void main() {
       test('should create separated ref context', () {
         $Cursor<int> a;
         $Cursor<int> b;
-        final func = $handle((bool input) {
+        final func = $bind((bool input) {
           a = $cursor(() => 1);
           b = $if(input, () {
             return $cursor(() => 2);
@@ -87,7 +87,7 @@ void main() {
     group('var', () {
       test('should emit VarEffect', () {
         final effects = <$UpdateVar>[];
-        final func = $handle((_) {
+        final func = $bind((_) {
           return $var(() => 1);
         }, effects.add);
         var v = func(null);
@@ -103,7 +103,7 @@ void main() {
     group('previous', () {
       test('should provide previous value', () {
         final listeners = $Listeners();
-        final func = $handle((value) {
+        final func = $bind((value) {
           return $previous(value);
         }, $listenAt(listeners));
         expect(func(1), null);
@@ -117,7 +117,7 @@ void main() {
     group('identical', () {
       test('should compare value and previous value', () {
         final listeners = $Listeners();
-        final func = $handle((value) {
+        final func = $bind((value) {
           return $identical(value);
         }, $listenAt(listeners));
         expect(func(1), false);
@@ -133,7 +133,7 @@ void main() {
     group('equals', () {
       test('should compare value and previous value', () {
         final listeners = $Listeners();
-        final func = $handle((value) {
+        final func = $bind((value) {
           return $equals(value);
         }, $listenAt(listeners));
         expect(func(1), false);
@@ -149,7 +149,7 @@ void main() {
     group('shallowEquals', () {
       test('should compare value and previous value', () {
         final listeners = $Listeners();
-        final func = $handle((value) {
+        final func = $bind((value) {
           return $shallowEquals(value);
         }, $listenAt(listeners));
         expect(func([1]), false);
@@ -170,7 +170,7 @@ void main() {
         final listener = (int i) {
           return;
         };
-        final func = $handle((_) {
+        final func = $bind((_) {
           $listen(listener);
         }, effects.add);
         func(null);
@@ -185,7 +185,7 @@ void main() {
           final callCount = $cursor(() => 0);
           return callCount.value += i;
         };
-        final func = $handle((_) {
+        final func = $bind((_) {
           result = $listen(listener);
         }, effects.add);
         func(null);
@@ -209,7 +209,7 @@ void main() {
           };
         };
         var result = 0;
-        final func = $handle((input) {
+        final func = $bind((input) {
           $if(!$identical(input), () {
             result = $fork(listener);
           });

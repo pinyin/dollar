@@ -1,6 +1,6 @@
 import 'dart:collection';
 
-$Effects<T, R> $handle<T, R>($Effects<T, R> func, [$EffectHandler handler]) {
+$Effects<T, R> $bind<T, R>($Effects<T, R> func, [$EffectHandler handler]) {
   assert(_handler == null || handler == null);
   assert(_handler != null || handler != null);
   // TODO support multiple handler

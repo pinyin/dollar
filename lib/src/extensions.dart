@@ -6,7 +6,7 @@ $Var<T> $var<T>(T init()) {
   final cursor = $cursor<$Var<T>>(() => null);
   $if(!didInit.value, () {
     cursor.value = _$VarImpl(
-        init(), $handle((T to) => $effect((_) => $UpdateVar(to, cursor))));
+        init(), $bind((T to) => $effect((_) => $UpdateVar(to, cursor))));
     didInit.value = true;
   });
   return cursor.value;
@@ -54,7 +54,7 @@ R $listen<T, R>($Effects<T, R> callback) {
   latestCallback.value = callback;
   final result = $cursor<R>(() => null);
   final listener =
-      $handle((T event) => result.value = latestCallback.value(event));
+      $bind((T event) => result.value = latestCallback.value(event));
   $final(() => $effect((cursor) => $AddListener(listener, cursor)));
   return result.value;
 }

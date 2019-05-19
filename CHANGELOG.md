@@ -6,3 +6,8 @@
 
 - Add TravisCI support.
 - Add multiple extensions.
+
+## 0.0.3
+
+- Rename `$handle` to `$bind`.
+- Make `$previous` a listener.
