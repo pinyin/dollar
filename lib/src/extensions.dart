@@ -17,11 +17,11 @@ $Var<T> $var<T>(T init()) {
   return cursor.value;
 }
 
-T $final<T>(T init(), [bool keep(T prev)]) {
+T $final<T>(T init(), [bool keep()]) {
   final didInit = $cursor(() => false);
   final cursor = $cursor<T>(() => null);
-  final shouldRecompute = keep != null && !keep(cursor.value);
-  $if(!didInit.value || shouldRecompute, () {
+  final shouldKeep = $if(keep != null, () => keep(), orElse: () => true);
+  $if(!didInit.value || !shouldKeep, () {
     cursor.value = init();
     didInit.value = true;
   });

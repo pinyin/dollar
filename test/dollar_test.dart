@@ -117,7 +117,7 @@ void main() {
       test('should keep value when second parameter is true', () {
         var value = 0;
         final func = $bind((keep) {
-          return $final(() => ++value, (_) => keep);
+          return $final(() => ++value, () => keep);
         }, (_) {});
         expect(func(true), 1);
         expect(func(true), 1);
