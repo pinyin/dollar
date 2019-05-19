@@ -1,4 +1,3 @@
-import 'package:collection/collection.dart';
 import 'package:dollar/dollar.dart';
 
 $Var<T> $var<T>(T init()) {
@@ -18,22 +17,13 @@ T $final<T>(T init()) {
 
 T $previous<T>(T value) {
   final curr = $cursor<T>(() => null);
+  final prev = curr.value;
   curr.value = value;
-  final prev = $cursor<T>(() => null);
-  $listen(($Pass _) => prev.value = curr.value);
-  return prev.value;
+  return prev;
 }
 
-bool $identical(Object value) {
-  return identical(value, $previous(value));
-}
-
-bool $equals(Object value) {
-  return value == $previous(value);
-}
-
-bool $shallowEquals(Iterable values) {
-  return _shallowEquals(values, $previous(values));
+R $diff<T, R>(T value, R diff(T prev, T curr)) {
+  return diff($previous(value), value);
 }
 
 T $fork<T>($Effects<$Var<T>, Function()> work) {
@@ -123,8 +113,4 @@ class $AddListener<T> implements $Effect {
         type = T;
 }
 
-class $Pass {}
-
 class $End {}
-
-final _shallowEquals = const IterableEquality().equals;
