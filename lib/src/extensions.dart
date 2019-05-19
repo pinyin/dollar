@@ -1,5 +1,11 @@
 import 'package:dollar/dollar.dart';
 
+$Ref<T> $ref<T>(T value) {
+  final cursor = $cursor<_$RefImpl<T>>(() => _$RefImpl(value));
+  cursor.value.value = value;
+  return cursor.value;
+}
+
 $Var<T> $var<T>(T init()) {
   final didInit = $cursor(() => false);
   final cursor = $cursor<$Var<T>>(() => null);
@@ -56,6 +62,16 @@ R $listen<T, R>($Effects<T, R> callback) {
   return result.value;
 }
 
+abstract class $Ref<T> {
+  T get value;
+}
+
+class _$RefImpl<T> extends $Ref<T> {
+  T value;
+
+  _$RefImpl(this.value);
+}
+
 abstract class $Var<T> {
   T get value;
   set value(T newValue);
@@ -100,7 +116,7 @@ class $UpdateVar<T> extends $Effect {
   $UpdateVar(this.to, this.at);
 }
 
-class $AddListener<T> implements $Effect {
+class $AddListener<T> extends $Effect {
   final $Cursor at;
   final Function callback;
   final Type type;

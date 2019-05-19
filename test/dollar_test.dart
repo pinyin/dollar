@@ -84,6 +84,19 @@ void main() {
   });
 
   group('extensions', () {
+    group('ref', () {
+      test('should keep reference to value', () {
+        final refs = <$Ref>[];
+        final func = $bind((value) {
+          refs.add($ref(() => value));
+        }, (_) {});
+        func(1);
+        func(2);
+        expect(refs[0], refs[1]);
+        expect(refs[0].value(), 2);
+      });
+    });
+
     group('var', () {
       test('should emit VarEffect', () {
         final effects = <$UpdateVar>[];
