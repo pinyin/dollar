@@ -189,7 +189,7 @@ void main() {
         final effects = <$Effect>[];
         final listeners = $Listeners();
         var closeCount = 0;
-        final listener = ($Var<int> value) {
+        final listener = ($Cursor<int> value) {
           value.value ??= 0;
           value.value++;
           return () {

@@ -39,22 +39,20 @@ R $diff<T, R>(T value, R diff(T prev, T curr)) {
   return diff($previous(value), value);
 }
 
-T $fork<T>($Effects<$Var<T>, Function()> work) {
-  final result = $var<T>(() => null);
-  final cleanup = $cursor<Function()>(() => null);
+T $fork<T>($Effects<$Cursor<T>, Function()> work) {
+  final result = $cursor<T>(() => null);
+  final cleanup = $ref($previous(work(result)));
+
   final maybeCleanup = () => $if(cleanup.value != null, cleanup.value);
 
   maybeCleanup();
-  cleanup.value = work(result);
-
   $listen(($End _) => maybeCleanup());
 
   return result.value;
 }
 
 R $listen<T, R>($Effects<T, R> callback) {
-  final latestCallback = $cursor(() => callback);
-  latestCallback.value = callback;
+  final latestCallback = $ref(callback);
   final result = $cursor<R>(() => null);
   final listener =
       $bind((T event) => result.value = latestCallback.value(event));
