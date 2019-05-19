@@ -48,16 +48,13 @@ T $scan<T>(T compute(T prev)) {
   return cursor.value;
 }
 
-T $fork<T>($Effects<$Cursor<T>, Function()> work) {
-  final result = $cursor<T>(() => null);
+void $fork(Function() work()) {
   final cleanup = $cursor<Function()>(() => null);
 
   final maybeCleanup = () => $if(cleanup.value != null, cleanup.value);
   maybeCleanup();
-  cleanup.value = work(result);
+  cleanup.value = work();
   $listen(($End _) => maybeCleanup());
-
-  return result.value;
 }
 
 R $listen<T, R>($Effects<T, R> callback) {

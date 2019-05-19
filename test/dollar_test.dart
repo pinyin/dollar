@@ -211,16 +211,12 @@ void main() {
         final effects = <$Effect>[];
         final listeners = $Listeners();
         var closeCount = 0;
-        final listener = ($Cursor<int> value) {
-          value.value ??= 0;
-          value.value++;
-          return () {
-            closeCount++;
-          };
-        };
         var result = 0;
         final func = $bind((_) {
-          result = $fork(listener);
+          $fork(() {
+            result++;
+            return () => closeCount++;
+          });
         }, $combineHandlers([$listenAt(listeners), effects.add]));
         func(null);
         expect(result, 1);
