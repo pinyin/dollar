@@ -28,7 +28,7 @@ T $cache<T>(T compute(), bool reusable) {
 }
 
 T $final<T>(T init()) {
-  return $cursor<T>(() => init()).value;
+  return $cache<T>(() => init(), true);
 }
 
 T $prev<T>(T value) {
