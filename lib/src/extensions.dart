@@ -39,6 +39,14 @@ R $diff<T, R>(T value, R diff(T prev, T curr)) {
   return diff($previous(value), value);
 }
 
+T $scan<T>(T compute(T prev), bool skip()) {
+  final cursor = $cursor<T>(() => null);
+  $if(!skip(), () {
+    cursor.value = compute(cursor.value);
+  });
+  return cursor.value;
+}
+
 T $fork<T>($Effects<$Cursor<T>, Function()> work) {
   final result = $cursor<T>(() => null);
   final cleanup = $ref($previous(work(result)));

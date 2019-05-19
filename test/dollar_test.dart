@@ -152,6 +152,19 @@ void main() {
       });
     });
 
+    group('scan', () {
+      test('should compute value based on previous value', () {
+        final func = $bind((skip) {
+          return $scan((prev) => (prev ?? 0) + 1, () => skip);
+        }, (_) {});
+        expect(func(true), null);
+        expect(func(false), 1);
+        expect(func(false), 2);
+        expect(func(true), 2);
+        expect(func(true), 2);
+      });
+    });
+
     group('listen', () {
       test('should emit listener event', () {
         final effects = <$Effect>[];
