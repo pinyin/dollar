@@ -3,7 +3,7 @@ import 'package:test/test.dart';
 
 void main() {
   group('core', () {
-    group('handle', () {
+    group('bind', () {
       test('should forward effects to handler', () {
         final effects = <_MockEffect>[];
         final func = $bind((_) {
@@ -32,18 +32,18 @@ void main() {
         expect(effects.map((e) => e.value), [1, 2, 3, 4]);
       });
     });
-    group('ref', () {
+    group('cursor', () {
       test('should keep updates across calls', () {
-        $Cursor<int> ref;
+        $Cursor<int> cursor;
         final func = $bind((_) {
-          ref = $cursor(() => 1);
+          cursor = $cursor(() => 1);
           $cursor(() => 2);
         }, (effect) {});
         func(null);
-        expect(ref?.value, 1);
-        ref.value++;
+        expect(cursor?.value, 1);
+        cursor.value++;
         func(null);
-        expect(ref?.value, 2);
+        expect(cursor?.value, 2);
       });
     });
     group('if', () {
@@ -127,11 +127,11 @@ void main() {
       });
     });
 
-    group('previous', () {
+    group('prev', () {
       test('should provide previous value', () {
         final listeners = $Listeners();
         final func = $bind((value) {
-          return $previous(value);
+          return $prev(value);
         }, $listenAt(listeners));
         expect(func(1), null);
         expect(func(2), 1);

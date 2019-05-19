@@ -28,7 +28,7 @@ T $final<T>(T init(), [bool keep()]) {
   return cursor.value;
 }
 
-T $previous<T>(T value) {
+T $prev<T>(T value) {
   final curr = $cursor<T>(() => null);
   final prev = curr.value;
   curr.value = value;
@@ -36,7 +36,7 @@ T $previous<T>(T value) {
 }
 
 R $diff<T, R>(T value, R diff(T prev, T curr)) {
-  return diff($previous(value), value);
+  return diff($prev(value), value);
 }
 
 T $scan<T>(T compute(T prev), bool skip()) {
@@ -49,7 +49,7 @@ T $scan<T>(T compute(T prev), bool skip()) {
 
 T $fork<T>($Effects<$Cursor<T>, Function()> work) {
   final result = $cursor<T>(() => null);
-  final cleanup = $ref($previous(work(result)));
+  final cleanup = $ref($prev(work(result)));
 
   final maybeCleanup = () => $if(cleanup.value != null, cleanup.value);
 
