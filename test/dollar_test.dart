@@ -175,8 +175,8 @@ void main() {
         }, effects.add);
         func(null);
         func(null);
-        expect(effects.length, 1);
-        expect(effects[0] is $AddListener<int>, true);
+        expect(effects.length, 2);
+        expect(effects[0].at, effects[1].at);
       });
       test('should wrap callback into an effect', () {
         final effects = [];
@@ -230,6 +230,29 @@ void main() {
             .callback($End());
         expect(result, 2);
         expect(closeCount, 2);
+      });
+    });
+  });
+
+  group('utils', () {
+    group('combineHandlers', () {
+      test('should call handlers in order', () {
+        final results = <int>[];
+        $combineHandlers([(_) => results.add(1), (_) => results.add(2)])(null);
+        expect(results, [1, 2]);
+      });
+    });
+    group('listenAt', () {
+      test('should save listeners in Listeners', () {
+        final listeners = $Listeners();
+        final results = <int>[];
+        final func = $bind((_) {
+          $listen(results.add);
+        }, $listenAt(listeners));
+        func(null);
+        listeners.trigger(1);
+        listeners.trigger(2);
+        expect(results, [1, 2]);
       });
     });
   });

@@ -55,7 +55,7 @@ R $listen<T, R>($Effects<T, R> callback) {
   final result = $cursor<R>(() => null);
   final listener =
       $bind((T event) => result.value = latestCallback.value(event));
-  $final(() => $effect((cursor) => $AddListener(listener, cursor)));
+  $effect((cursor) => $AddListener(listener, cursor));
   return result.value;
 }
 
