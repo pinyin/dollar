@@ -105,11 +105,11 @@ void main() {
         }, effects.add);
         var v = func(null);
         v.value = 2;
-        expect(effects[0].from, 1);
+        expect(effects.length, 1);
         effects.clear();
         v = func(null);
         v.value = 3;
-        expect(effects[0].from, 2);
+        expect(effects.length, 1);
       });
     });
 
@@ -248,6 +248,25 @@ void main() {
         listeners.trigger(1);
         listeners.trigger(2);
         expect(results, [1, 2]);
+      });
+    });
+    group('convergeVars', () {
+      test('should rerun function until no pending Var is updated', () {
+        final effects = <$Effect>[];
+        final func = $convergeVars((int value) {
+          final even = $var(() => value);
+          final result = $cursor(() => 0);
+          result.value = even.value;
+          $if(even.value % 2 != 0, () {
+            even.value++;
+          });
+          return result.value;
+        }, effects.add);
+        expect(func(1), 2);
+        expect(func(1), 2);
+        expect(effects.length, 1);
+        final effect = effects[0];
+        expect(effect is $UpdateVar<int>, true);
       });
     });
   });

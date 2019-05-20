@@ -2,7 +2,9 @@ import 'package:dollar/dollar.dart';
 
 $EffectHandler $combineHandlers(Iterable<$EffectHandler> handlers) {
   return ($Effect effect) {
-    handlers.forEach((handler) => handler(effect));
+    for (final handler in handlers) {
+      if (handler is $EffectHandler) handler(effect);
+    }
   };
 }
 
@@ -11,6 +13,25 @@ $EffectHandler $listenAt($Listeners listeners) {
     if (effect is $AddListener) {
       listeners.add(effect.type, effect.callback, effect.at);
     }
+  };
+}
+
+R Function(T) $convergeVars<T, R>(R func(T params), [$EffectHandler handler]) {
+  var isInconsistent = false;
+  final bindFunc = $bind(
+      func,
+      $combineHandlers([
+        (effect) => isInconsistent = isInconsistent || effect is $UpdateVar,
+        handler
+      ]));
+
+  return (T params) {
+    R result;
+    do {
+      isInconsistent = false;
+      result = bindFunc(params);
+    } while (isInconsistent);
+    return result;
   };
 }
 

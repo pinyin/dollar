@@ -1,8 +1,6 @@
 import 'dart:collection';
 
-$Effects<T, R> $bind<T, R>($Effects<T, R> func, [$EffectHandler handler]) {
-  assert(_handler == null || handler == null);
-  assert(_handler != null || handler != null);
+R Function(T) $bind<T, R>(R func(T params), [$EffectHandler handler]) {
   // TODO support multiple handler
   // TODO support function with arbitrary signature
 
@@ -37,6 +35,7 @@ $Cursor<T> $cursor<T>(T init()) {
     _context = null;
     final cursor = _$CursorImpl<T>();
     cursor.value = init();
+    assert(_context == null);
     _context = prevContext;
     return cursor;
   }();
@@ -69,7 +68,10 @@ T $if<T>(bool condition, T then(), {T orElse()}) {
 
 T $effect<T>($Effect createEffect($Cursor cursor)) {
   final cursor = $cursor<T>(() => null);
+  final prevContext = _context;
+  _context = null;
   _handler(createEffect(cursor));
+  _context = prevContext;
   return cursor.value;
 }
 
@@ -132,5 +134,3 @@ class _$CursorInContext extends LinkedListEntry<_$CursorInContext> {
 _Context _context;
 
 $EffectHandler _handler;
-
-typedef $Effects<T, R> = R Function(T);

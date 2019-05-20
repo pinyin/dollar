@@ -11,7 +11,10 @@ $Var<T> $var<T>(T init()) {
   final cursor = $cursor<$Var<T>>(() => null);
   $if(!didInit.value, () {
     cursor.value = _$VarImpl(
-        init(), $bind((T from) => $effect((_) => $UpdateVar(from, cursor))));
+      init(),
+      $bind((T from) =>
+          $bind((T to) => $effect((cursor) => $UpdateVar(from, to, cursor)))),
+    );
     didInit.value = true;
   });
   return cursor.value;
@@ -89,33 +92,31 @@ class _$VarImpl<T> extends $Var<T> {
   set value(T newValue) {
     final prevValue = _value;
     _value = newValue;
-    _onUpdate(prevValue);
+    onUpdate(prevValue)(newValue);
   }
 
   T _value;
-  $Effects<T, void> _onUpdate;
+  final Function(T to) Function(T from) onUpdate;
 
-  _$VarImpl(T value, void onUpdate(T from))
-      : _value = value,
-        _onUpdate = onUpdate;
+  _$VarImpl(T value, this.onUpdate) : _value = value;
 }
 
 class $UpdateVar<T> extends $Effect {
-  final T from;
   final $Cursor at;
+  final T from;
+  final T to;
 
   @override
   bool operator ==(other) {
     return other is $UpdateVar<T> &&
         other.runtimeType == runtimeType &&
-        other.from == from &&
         other.at == at;
   }
 
   @override
-  int get hashCode => from.hashCode;
+  int get hashCode => at.hashCode;
 
-  $UpdateVar(this.from, this.at);
+  $UpdateVar(this.from, this.to, this.at);
 }
 
 class $AddListener<T> extends $Effect {
