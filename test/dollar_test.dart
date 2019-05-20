@@ -189,7 +189,7 @@ void main() {
         expect(effects[0].at, effects[1].at);
       });
       test('should wrap callback into an effect', () {
-        final effects = [];
+        final listeners = $Listeners();
         var result = 0;
         final listener = (int i) {
           final callCount = $cursor(() => 0);
@@ -197,10 +197,9 @@ void main() {
         };
         final func = $bind((_) {
           $listen(listener);
-        }, effects.add);
+        }, $listenAt(listeners));
         func(null);
-        expect(effects[0] is $AddListener<int>, true);
-        (effects[0] as $AddListener<int>).callback(1);
+        listeners.trigger(1);
         func(null);
         expect(result, 1);
       });
@@ -208,7 +207,6 @@ void main() {
 
     group('fork', () {
       test('should run one instance of work', () {
-        final effects = <$Effect>[];
         final listeners = $Listeners();
         var closeCount = 0;
         var result = 0;
@@ -217,16 +215,14 @@ void main() {
             result++;
             return () => closeCount++;
           });
-        }, $combineHandlers([$listenAt(listeners), effects.add]));
+        }, $listenAt(listeners));
         func(null);
         expect(result, 1);
         expect(closeCount, 0);
         func(null);
         expect(result, 2);
         expect(closeCount, 1);
-        (effects.where((e) => e is $AddListener<$End>).first
-                as $AddListener<$End>)
-            .callback($End());
+        listeners.trigger($End());
         expect(result, 2);
         expect(closeCount, 2);
       });
