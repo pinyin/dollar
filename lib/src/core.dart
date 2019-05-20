@@ -32,8 +32,14 @@ $Effects<T, R> $bind<T, R>($Effects<T, R> func, [$EffectHandler handler]) {
 }
 
 $Cursor<T> $cursor<T>(T init()) {
-  final $Cursor<T> result =
-      _context.cursor ??= _$CursorImpl<T>()..value = init();
+  final $Cursor<T> result = _context.cursor ??= () {
+    final prevContext = _context;
+    _context = null;
+    final cursor = _$CursorImpl<T>();
+    cursor.value = init();
+    _context = prevContext;
+    return cursor;
+  }();
   _context.cursorNext();
   return result;
 }

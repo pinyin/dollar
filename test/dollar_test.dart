@@ -105,11 +105,11 @@ void main() {
         }, effects.add);
         var v = func(null);
         v.value = 2;
-        expect(effects[0].to, 2);
+        expect(effects[0].from, 1);
         effects.clear();
         v = func(null);
         v.value = 3;
-        expect(effects[0].to, 3);
+        expect(effects[0].from, 2);
       });
     });
 
