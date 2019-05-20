@@ -38,7 +38,7 @@ void main() {
         final func = $bind((_) {
           cursor = $cursor(() => 1);
           $cursor(() => 2);
-        }, (effect) {});
+        });
         func(null);
         expect(cursor?.value, 1);
         cursor.value++;
@@ -52,7 +52,7 @@ void main() {
           return $if(input, () {
             return 1;
           }, orElse: () => 2);
-        }, (effect) {});
+        });
         expect(func(true), 1);
         expect(func(false), 2);
       });
@@ -66,7 +66,7 @@ void main() {
           }, orElse: () => $cursor(() => 3));
           a.value++;
           b.value--;
-        }, (_) {});
+        });
         func(true);
         expect(a?.value, 2);
         expect(b?.value, 1);
@@ -89,7 +89,7 @@ void main() {
         final refs = <$Ref>[];
         final func = $bind((value) {
           refs.add($ref(() => value));
-        }, (_) {});
+        });
         func(1);
         func(2);
         expect(refs[0], refs[1]);
@@ -118,7 +118,7 @@ void main() {
         var value = 0;
         final func = $bind((_) {
           return $final(() => ++value);
-        }, (_) {});
+        });
         expect(func(null), 1);
         expect(func(null), 1);
       });
@@ -129,7 +129,7 @@ void main() {
         var value = 0;
         final func = $bind((keep) {
           return $cache(() => ++value, keep);
-        }, (_) {});
+        });
         expect(func(true), 1);
         expect(func(true), 1);
         expect(func(false), 2);
@@ -167,7 +167,7 @@ void main() {
       test('should compute value based on previous value', () {
         final func = $bind((_) {
           return $scan((prev) => (prev ?? 0) + 1);
-        }, (_) {});
+        });
         expect(func(null), 1);
         expect(func(null), 2);
         expect(func(null), 3);
