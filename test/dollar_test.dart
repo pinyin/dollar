@@ -251,22 +251,26 @@ void main() {
       });
     });
     group('convergeVars', () {
-      test('should rerun function until no pending Var is updated', () {
+      test('should skip one microtask and rerun if a Var is updated', () async {
         final effects = <$Effect>[];
         final func = $convergeVars((int value) {
           final even = $var(() => value);
           final result = $cursor(() => 0);
           result.value = even.value;
           $if(even.value % 2 != 0, () {
-            even.value++;
+            $fork(() {
+              () async {
+                await Future.microtask(() {});
+                even.value++;
+              }();
+            });
           });
           return result.value;
         }, effects.add);
-        expect(func(1), 2);
-        expect(func(1), 2);
-        expect(effects.length, 1);
-        final effect = effects[0];
-        expect(effect is $UpdateVar<int>, true);
+        expect(await func(1).take(2).toList(), [1, 2]);
+        expect(effects.length, 2);
+        expect(effects[0] is $AddListener<$End>, true);
+        expect(effects[1] is $UpdateVar<int>, true);
       });
     });
   });

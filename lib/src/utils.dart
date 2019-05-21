@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:dollar/dollar.dart';
 
 $EffectHandler $combineHandlers(Iterable<$EffectHandler> handlers) {
@@ -16,23 +18,41 @@ $EffectHandler $listenAt($Listeners listeners) {
   };
 }
 
-R Function(T) $convergeVars<T, R>(R func(T params), [$EffectHandler handler]) {
+Stream<R> Function(T) $convergeVars<T, R>(R func(T params),
+    [$EffectHandler handler]) {
+  final latestInput = _Ref<T>(null);
   var isInconsistent = false;
-  final bindFunc = $bind(
-      func,
-      $combineHandlers([
-        (effect) => isInconsistent = isInconsistent || effect is $UpdateVar,
-        handler
-      ]));
+  bool didScheduleMicrotask = false;
+
+  final outputController = StreamController<R>();
+  final output = outputController.stream.asBroadcastStream();
+
+  final handleUpdateVar = ($Effect effect) {
+    isInconsistent = isInconsistent || effect is $UpdateVar;
+
+    if (isInconsistent && !didScheduleMicrotask) {
+      scheduleMicrotask(() {
+        if (!isInconsistent) return;
+        isInconsistent = false;
+        didScheduleMicrotask = false;
+        outputController.add(func(latestInput.value));
+      });
+    }
+  };
+
+  func = $bind(func, $combineHandlers([handleUpdateVar, handler]));
 
   return (T params) {
-    R result;
-    do {
-      isInconsistent = false;
-      result = bindFunc(params);
-    } while (isInconsistent);
-    return result;
+    latestInput.value = params;
+    final result = func(params);
+    if (!isInconsistent) outputController.add(result);
+    return output;
   };
+}
+
+class _Ref<T> {
+  T value;
+  _Ref(this.value);
 }
 
 class $Listeners {
