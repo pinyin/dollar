@@ -22,7 +22,7 @@ Stream<R> Function(T) $convergeVars<T, R>(R func(T params),
     [$EffectHandler handler]) {
   final latestInput = _Ref<T>(null);
   var isInconsistent = false;
-  bool didScheduleMicrotask = false;
+  var didScheduleTask = false;
 
   final outputController = StreamController<R>();
   final output = outputController.stream.asBroadcastStream();
@@ -30,11 +30,12 @@ Stream<R> Function(T) $convergeVars<T, R>(R func(T params),
   final handleUpdateVar = ($Effect effect) {
     isInconsistent = isInconsistent || effect is $UpdateVar;
 
-    if (isInconsistent && !didScheduleMicrotask) {
+    if (isInconsistent && !didScheduleTask) {
+      didScheduleTask = true;
       scheduleMicrotask(() {
         if (!isInconsistent) return;
         isInconsistent = false;
-        didScheduleMicrotask = false;
+        didScheduleTask = false;
         outputController.add(func(latestInput.value));
       });
     }
