@@ -12,3 +12,7 @@
 - Rename `$handle` to `$bind`.
 - Make `$previous` a listener.
 - Add utils to help handling effects.
+
+## 0.1.0
+
+- Add support to `Stream`.

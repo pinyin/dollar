@@ -11,6 +11,7 @@ R Function(T) $bind<T, R>(R func(T params), [$EffectHandler handler]) {
   return (T params) {
     context.cursorReset();
 
+    //region Wrap func in bind context
     final prevHandler = _handler;
     final prevContext = _context;
 
@@ -24,6 +25,7 @@ R Function(T) $bind<T, R>(R func(T params), [$EffectHandler handler]) {
 
     _context = prevContext;
     _handler = prevHandler;
+    //endregion
 
     return result;
   };
@@ -31,6 +33,7 @@ R Function(T) $bind<T, R>(R func(T params), [$EffectHandler handler]) {
 
 $Cursor<T> $cursor<T>(T init()) {
   final $Cursor<T> result = _context.cursor ??= () {
+    //region Init cursor
     final prevContext = _context;
     _context = null;
     final cursor = _$CursorImpl<T>();
@@ -38,6 +41,7 @@ $Cursor<T> $cursor<T>(T init()) {
     assert(_context == null);
     _context = prevContext;
     return cursor;
+    //endregion
   }();
   _context.cursorNext();
   return result;

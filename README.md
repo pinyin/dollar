@@ -2,9 +2,9 @@
 
 [![Build Status](https://travis-ci.com/pinyin/dollar.svg?branch=master)](https://travis-ci.com/pinyin/dollar)
 
-Write async side effects in sync functions.
+A DSL to keep state in your functions.
 
-Inspired by hooks in React.
+Inspired by React hooks.
 
 ## Usage
 
@@ -21,7 +21,6 @@ final func = $bind((bool input) {
   b.value --;
   // a.value & b.value will be kept across calls
 }, (_) {});
-// values of a & b will be kept across different calls
 func(true);
 // a.value == 2, b.value == 1
 func(true);
