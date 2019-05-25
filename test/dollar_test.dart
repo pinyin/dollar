@@ -150,6 +150,19 @@ void main() {
       });
     });
 
+    group('updated', () {
+      test('should return the equality of value & previous value', () {
+        final listeners = $Listeners();
+        final func = $bind((value) {
+          return $updated(value);
+        }, $listenAt(listeners));
+        expect(func(1), true);
+        expect(func(2), true);
+        expect(func(2), false);
+        expect(func(3), true);
+      });
+    });
+
     group('diff', () {
       test('should provide value and previous value to diff function', () {
         final listeners = $Listeners();

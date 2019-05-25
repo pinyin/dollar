@@ -87,6 +87,10 @@ T $prev<T>(T value) {
   return prev;
 }
 
+bool $updated(Object value) {
+  return value != $prev(value);
+}
+
 R $diff<T, R>(T value, R diff(T prev, T curr)) {
   return diff($prev(value), value);
 }
