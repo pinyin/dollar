@@ -263,6 +263,24 @@ void main() {
         expect(results, [1, 2]);
       });
     });
+    group('onUpdateVar', () {
+      test('should call callback on UpdateVar effect', () {
+        final results = <$UpdateVar>[];
+        final func = $bind((_) {
+          return $var(() => 0);
+        }, $onUpdateVar(results.add));
+        func(null).value = 0;
+        func(null).value = 1;
+        func(null).value = 2;
+        expect(results.length, 3);
+        expect(results[0].from, 0);
+        expect(results[0].to, 0);
+        expect(results[1].from, 0);
+        expect(results[1].to, 1);
+        expect(results[2].from, 1);
+        expect(results[2].to, 2);
+      });
+    });
     group('convergeVars', () {
       test('should skip one microtask and rerun if a Var is updated', () async {
         final effects = <$Effect>[];

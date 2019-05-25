@@ -18,6 +18,12 @@ $EffectHandler $listenAt($Listeners listeners) {
   };
 }
 
+$EffectHandler $onUpdateVar(void onUpdate($UpdateVar effect)) {
+  return (effect) {
+    if (effect is $UpdateVar) onUpdate(effect);
+  };
+}
+
 Stream<R> Function(T) $convergeVars<T, R>(R func(T params),
     [$EffectHandler handler]) {
   final latestInput = _Ref<T>(null);
