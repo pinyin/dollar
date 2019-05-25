@@ -59,8 +59,7 @@ $Var<T> $var<T>(T init()) {
   $if(!didInit.value, () {
     cursor.value = _$VarImpl(
       init(),
-      $bind((T from) =>
-          $bind((T to) => $effect((cursor) => $UpdateVar(from, to, cursor)))),
+      $bind2((T from,T to) => $effect((cursor) => $UpdateVar(from, to, cursor))),
     );
     didInit.value = true;
   });
@@ -139,11 +138,11 @@ class _$VarImpl<T> extends $Var<T> {
   set value(T newValue) {
     final prevValue = _value;
     _value = newValue;
-    onUpdate(prevValue)(newValue);
+    onUpdate(prevValue, newValue);
   }
 
   T _value;
-  final Function(T to) Function(T from) onUpdate;
+  final  Function(T from, T to) onUpdate;
 
   _$VarImpl(T value, this.onUpdate) : _value = value;
 }
