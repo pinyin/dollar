@@ -1,6 +1,8 @@
 import 'dart:collection';
 
-R Function(T) $bind<T, R>(R func(T params), [$EffectHandler handler]) {
+R Function(A, B, C, D, E, F, G) $bind7<R, A, B, C, D, E, F, G>(
+    R func(A a, B b, C c, D d, E e, F f, G g),
+    [$EffectHandler handler]) {
   // TODO support multiple handler
   // TODO support function with arbitrary signature
 
@@ -8,7 +10,7 @@ R Function(T) $bind<T, R>(R func(T params), [$EffectHandler handler]) {
       _context == null ? _Context() : $cursor(() => _Context()).value;
   handler ??= _handler;
 
-  return (T params) {
+  return (A a, B b, C c, D d, E e, F f, G g) {
     context.cursorReset();
 
     //region Wrap func in bind context
@@ -18,7 +20,7 @@ R Function(T) $bind<T, R>(R func(T params), [$EffectHandler handler]) {
     _handler = handler;
     _context = context;
 
-    final result = func(params);
+    final result = func(a, b, c, d, e, f, g);
 
     assert(identical(_context, context));
     assert(identical(_handler, handler));

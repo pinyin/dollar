@@ -1,5 +1,52 @@
 import 'package:dollar/dollar.dart';
 
+R Function(A, B, C, D, E, F) $bind6<R, A, B, C, D, E, F>(
+    R func(A a, B b, C c, D d, E e, F f),
+    [$EffectHandler handler]) {
+  final inner =
+      $bind7((A a, B b, C c, D d, E e, F f, void g) => func(a, b, c, d, e, f));
+  return (a, b, c, d, e, f) => inner(a, b, c, d, e, f, null);
+}
+
+R Function(A, B, C, D, E) $bind5<R, A, B, C, D, E>(
+    R func(A a, B b, C c, D d, E e),
+    [$EffectHandler handler]) {
+  final inner = $bind7(
+      (A a, B b, C c, D d, E e, void f, void g) => func(a, b, c, d, e),
+      handler);
+  return (a, b, c, d, e) => inner(a, b, c, d, e, null, null);
+}
+
+R Function(A, B, C, D) $bind4<R, A, B, C, D>(R func(A a, B b, C c, D d),
+    [$EffectHandler handler]) {
+  final inner = $bind7(
+      (A a, B b, C c, D d, void e, void f, void g) => func(a, b, c, d),
+      handler);
+  return (a, b, c, d) => inner(a, b, c, d, null, null, null);
+}
+
+R Function(A, B, C) $bind3<R, A, B, C>(R func(A a, B b, C c),
+    [$EffectHandler handler]) {
+  final inner = $bind7(
+      (A a, B b, C c, void d, void e, void f, void g) => func(a, b, c),
+      handler);
+  return (a, b, c) => inner(a, b, c, null, null, null, null);
+}
+
+R Function(A, B) $bind2<R, A, B>(R func(A a, B b), [$EffectHandler handler]) {
+  final inner = $bind7(
+      (A a, B b, void c, void d, void e, void f, void g) => func(a, b),
+      handler);
+  return (a, b) => inner(a, b, null, null, null, null, null);
+}
+
+R Function(A) $bind<R, A>(R func(A a), [$EffectHandler handler]) {
+  final inner = $bind7(
+      (A a, void b, void c, void d, void e, void f, void g) => func(a),
+      handler);
+  return (a) => inner(a, null, null, null, null, null, null);
+}
+
 $Ref<T> $ref<T>(T value) {
   final cursor = $cursor<_$RefImpl<T>>(() => _$RefImpl(value));
   cursor.value.value = value;
