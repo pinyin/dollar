@@ -71,7 +71,7 @@ class $Listeners {
   }
 
   trigger<T>(T event) {
-    for (final cursor in _cursors[event.runtimeType]) {
+    for (final cursor in (_cursors[event.runtimeType] ??= {})) {
       final callback = _callbacks[cursor];
       if (callback is Function) {
         callback(event);

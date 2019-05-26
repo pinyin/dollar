@@ -262,6 +262,11 @@ void main() {
         listeners.trigger(2);
         expect(results, [1, 2]);
       });
+      test('should be able to trigger event without listener', () {
+        final listeners = $Listeners();
+        listeners.trigger(1);
+        listeners.trigger(2);
+      });
     });
     group('onUpdateVar', () {
       test('should call callback on UpdateVar effect', () {
