@@ -31,6 +31,19 @@ void main() {
         func(null);
         expect(effects.map((e) => e.value), [1, 2, 3, 4]);
       });
+      test('should create new context iff handler is not null', () {
+        final func = $bind((branch) {
+          if (branch) {
+            $bind((_) {
+              $cursor(() => 1);
+            }, (_) {})(null);
+          }
+          $cursor(() => 'a');
+        }, (_) {});
+        func(true);
+        func(false);
+        func(true);
+      });
     });
     group('cursor', () {
       test('should keep updates across calls', () {
@@ -38,7 +51,7 @@ void main() {
         final func = $bind((_) {
           cursor = $cursor(() => 1);
           $cursor(() => 2);
-        });
+        }, (_) {});
         func(null);
         expect(cursor?.value, 1);
         cursor.value++;
@@ -52,7 +65,7 @@ void main() {
           return $if(input, () {
             return 1;
           }, orElse: () => 2);
-        });
+        }, (_) {});
         expect(func(true), 1);
         expect(func(false), 2);
       });
@@ -66,7 +79,7 @@ void main() {
           }, orElse: () => $cursor(() => 3));
           a.value++;
           b.value--;
-        });
+        }, (_) {});
         func(true);
         expect(a?.value, 2);
         expect(b?.value, 1);
@@ -89,7 +102,7 @@ void main() {
         final refs = <$Ref>[];
         final func = $bind((value) {
           refs.add($ref(() => value));
-        });
+        }, (_) {});
         func(1);
         func(2);
         expect(refs[0], refs[1]);
@@ -118,7 +131,7 @@ void main() {
         var value = 0;
         final func = $bind((_) {
           return $final(() => ++value);
-        });
+        }, (_) {});
         expect(func(null), 1);
         expect(func(null), 1);
       });
@@ -129,7 +142,7 @@ void main() {
         var value = 0;
         final func = $bind((keep) {
           return $cache(() => ++value, keep);
-        });
+        }, (_) {});
         expect(func(true), 1);
         expect(func(true), 1);
         expect(func(false), 2);
@@ -180,7 +193,7 @@ void main() {
       test('should compute value based on previous value', () {
         final func = $bind((_) {
           return $scan((prev) => (prev ?? 0) + 1);
-        });
+        }, (_) {});
         expect(func(null), 1);
         expect(func(null), 2);
         expect(func(null), 3);

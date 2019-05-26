@@ -16,3 +16,6 @@
 ## 0.1.0
 
 - Add support to `Stream`.
+- Add bind support to functions with multiple parameters.
+- Add some extensions & utils.
+- Create new context iff a effect handler is provided.

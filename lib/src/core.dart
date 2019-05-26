@@ -3,11 +3,10 @@ import 'dart:collection';
 R Function(A, B, C, D, E, F, G) $bind7<R, A, B, C, D, E, F, G>(
     R func(A a, B b, C c, D d, E e, F f, G g),
     [$EffectHandler handler]) {
-  // TODO support multiple handler
   // TODO support function with arbitrary signature
 
   final context =
-      _context == null ? _Context() : $cursor(() => _Context()).value;
+      handler != null ? _Context() : $cursor(() => _Context()).value;
   handler ??= _handler;
 
   return (A a, B b, C c, D d, E e, F f, G g) {
@@ -76,7 +75,7 @@ T $effect<T>($Effect createEffect($Cursor cursor)) {
   final cursor = $cursor<T>(() => null);
   final prevContext = _context;
   _context = null;
-  _handler(createEffect(cursor));
+  if (_handler != null) _handler(createEffect(cursor));
   _context = prevContext;
   return cursor.value;
 }
