@@ -1,6 +1,6 @@
 name: dollar
-description: Write async side effects in sync functions.
-version: 0.0.3
+description: Use $tateful functions everywhere.
+version: 0.1.0
 homepage: https://github.com/pinyin/dollar
 author: Bo Bao <bob432091@gmail.com>
 
