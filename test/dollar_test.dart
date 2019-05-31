@@ -163,16 +163,29 @@ void main() {
       });
     });
 
-    group('updated', () {
-      test('should return the equality of value & previous value', () {
+    group('equals', () {
+      test('should return the identicality of value & previous value', () {
         final listeners = $Listeners();
         final func = $bind((value) {
-          return $updated(value);
+          return $equals(value);
         }, $listenAt(listeners));
-        expect(func(1), true);
-        expect(func(2), true);
+        expect(func(1), false);
         expect(func(2), false);
-        expect(func(3), true);
+        expect(func(2), true);
+        expect(func(3), false);
+      });
+    });
+
+    group('identical', () {
+      test('should return the identicality of value & previous value', () {
+        final listeners = $Listeners();
+        final func = $bind((value) {
+          return $identical(value);
+        }, $listenAt(listeners));
+        expect(func(1), false);
+        expect(func(2), false);
+        expect(func(2), true);
+        expect(func(3), false);
       });
     });
 

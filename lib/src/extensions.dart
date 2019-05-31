@@ -59,7 +59,8 @@ $Var<T> $var<T>(T init()) {
   $if(!didInit.value, () {
     cursor.value = _$VarImpl(
       init(),
-      $bind2((T from,T to) => $effect((cursor) => $UpdateVar(from, to, cursor))),
+      $bind2(
+          (T from, T to) => $effect((cursor) => $UpdateVar(from, to, cursor))),
     );
     didInit.value = true;
   });
@@ -87,8 +88,12 @@ T $prev<T>(T value) {
   return prev;
 }
 
-bool $updated(Object value) {
-  return value != $prev(value);
+bool $equals<T>(T value) {
+  return value == $prev(value);
+}
+
+bool $identical<T>(T value) {
+  return identical(value, $prev(value));
 }
 
 R $diff<T, R>(T value, R diff(T prev, T curr)) {
@@ -146,7 +151,7 @@ class _$VarImpl<T> extends $Var<T> {
   }
 
   T _value;
-  final  Function(T from, T to) onUpdate;
+  final Function(T from, T to) onUpdate;
 
   _$VarImpl(T value, this.onUpdate) : _value = value;
 }
