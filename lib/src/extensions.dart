@@ -2,48 +2,50 @@ import 'package:dollar/dollar.dart';
 
 R Function(A, B, C, D, E, F) $bind6<R, A, B, C, D, E, F>(
     R func(A a, B b, C c, D d, E e, F f),
-    [$EffectHandler handler]) {
-  final inner =
-      $bind7((A a, B b, C c, D d, E e, F f, void g) => func(a, b, c, d, e, f));
+    [$EffectHandlerCreator createHandler]) {
+  final inner = $bind7(
+      (A a, B b, C c, D d, E e, F f, void g) => func(a, b, c, d, e, f),
+      createHandler);
   return (a, b, c, d, e, f) => inner(a, b, c, d, e, f, null);
 }
 
 R Function(A, B, C, D, E) $bind5<R, A, B, C, D, E>(
     R func(A a, B b, C c, D d, E e),
-    [$EffectHandler handler]) {
+    [$EffectHandlerCreator createHandler]) {
   final inner = $bind7(
       (A a, B b, C c, D d, E e, void f, void g) => func(a, b, c, d, e),
-      handler);
+      createHandler);
   return (a, b, c, d, e) => inner(a, b, c, d, e, null, null);
 }
 
 R Function(A, B, C, D) $bind4<R, A, B, C, D>(R func(A a, B b, C c, D d),
-    [$EffectHandler handler]) {
+    [$EffectHandlerCreator createHandler]) {
   final inner = $bind7(
       (A a, B b, C c, D d, void e, void f, void g) => func(a, b, c, d),
-      handler);
+      createHandler);
   return (a, b, c, d) => inner(a, b, c, d, null, null, null);
 }
 
 R Function(A, B, C) $bind3<R, A, B, C>(R func(A a, B b, C c),
-    [$EffectHandler handler]) {
+    [$EffectHandlerCreator createHandler]) {
   final inner = $bind7(
       (A a, B b, C c, void d, void e, void f, void g) => func(a, b, c),
-      handler);
+      createHandler);
   return (a, b, c) => inner(a, b, c, null, null, null, null);
 }
 
-R Function(A, B) $bind2<R, A, B>(R func(A a, B b), [$EffectHandler handler]) {
+R Function(A, B) $bind2<R, A, B>(R func(A a, B b),
+    [$EffectHandlerCreator createHandler]) {
   final inner = $bind7(
       (A a, B b, void c, void d, void e, void f, void g) => func(a, b),
-      handler);
+      createHandler);
   return (a, b) => inner(a, b, null, null, null, null, null);
 }
 
-R Function(A) $bind<R, A>(R func(A a), [$EffectHandler handler]) {
+R Function(A) $bind<R, A>(R func(A a), [$EffectHandlerCreator createHandler]) {
   final inner = $bind7(
       (A a, void b, void c, void d, void e, void f, void g) => func(a),
-      handler);
+      createHandler);
   return (a) => inner(a, null, null, null, null, null, null);
 }
 
@@ -59,8 +61,7 @@ $Var<T> $var<T>(T init()) {
   $if(!didInit.value, () {
     cursor.value = _$VarImpl(
       init(),
-      $bind2(
-          (T from, T to) => $effect((cursor) => $UpdateVar(from, to, cursor))),
+      $bind2((T from, T to) => $effect($UpdateVar(from, to, cursor))),
     );
     didInit.value = true;
   });
@@ -117,8 +118,9 @@ void $fork(Function() work()) {
 
 void $listen<T>(void callback(T event)) {
   final latestCallback = $ref(callback);
+  final cursor = $cursor(() => null);
   final listener = $bind((T event) => latestCallback.value(event));
-  $effect((cursor) => $AddListener(listener, cursor));
+  $effect($AddListener(listener, cursor));
 }
 
 abstract class $Ref<T> {
@@ -156,7 +158,7 @@ class _$VarImpl<T> extends $Var<T> {
   _$VarImpl(T value, this.onUpdate) : _value = value;
 }
 
-class $UpdateVar<T> extends $Effect {
+class $UpdateVar<T> {
   final $Cursor at;
   final T from;
   final T to;
@@ -174,7 +176,7 @@ class $UpdateVar<T> extends $Effect {
   $UpdateVar(this.from, this.to, this.at);
 }
 
-class $AddListener<T> extends $Effect {
+class $AddListener<T> {
   final $Cursor at;
   final Function callback;
   final Type type;

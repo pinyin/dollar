@@ -5,41 +5,41 @@ void main() {
   group('core', () {
     group('bind', () {
       test('should forward effects to handler', () {
-        final effects = <_MockEffect>[];
+        final effects = [];
         final func = $bind((_) {
-          $effect((cursor) => _MockEffect(1, cursor));
-          $effect((cursor) => _MockEffect(2, cursor));
-        }, effects.add);
+          $effect(1);
+          $effect(2);
+        }, (_) => effects.add);
         expect(effects, []);
         func(null);
-        expect(effects.map((e) => e.value), [1, 2]);
+        expect(effects, [1, 2]);
       });
       test('should create new ref context', () {
-        final effects = <_MockEffect>[];
+        final effects = [];
         final func = $bind((_) {
-          $effect((cursor) => _MockEffect(1, cursor));
-          $effect((cursor) => _MockEffect(2, cursor));
+          $effect(1);
+          $effect(2);
           $bind((_) {
-            $effect((cursor) => _MockEffect(3, cursor));
-            $effect((cursor) => _MockEffect(4, cursor));
+            $effect(3);
+            $effect(4);
           })(null);
-        }, effects.add);
+        }, (_) => effects.add);
         expect(effects, []);
         func(null);
-        expect(effects.map((e) => e.value), [1, 2, 3, 4]);
+        expect(effects, [1, 2, 3, 4]);
         effects.clear();
         func(null);
-        expect(effects.map((e) => e.value), [1, 2, 3, 4]);
+        expect(effects, [1, 2, 3, 4]);
       });
       test('should create new context iff handler is not null', () {
         final func = $bind((branch) {
           if (branch) {
             $bind((_) {
               $cursor(() => 1);
-            }, (_) {})(null);
+            }, (_) => (_) {})(null);
           }
           $cursor(() => 'a');
-        }, (_) {});
+        }, $emptyHandler);
         func(true);
         func(false);
         func(true);
@@ -51,7 +51,7 @@ void main() {
         final func = $bind((_) {
           cursor = $cursor(() => 1);
           $cursor(() => 2);
-        }, (_) {});
+        }, $emptyHandler);
         func(null);
         expect(cursor?.value, 1);
         cursor.value++;
@@ -65,7 +65,7 @@ void main() {
           return $if(input, () {
             return 1;
           }, orElse: () => 2);
-        }, (_) {});
+        }, $emptyHandler);
         expect(func(true), 1);
         expect(func(false), 2);
       });
@@ -79,7 +79,7 @@ void main() {
           }, orElse: () => $cursor(() => 3));
           a.value++;
           b.value--;
-        }, (_) {});
+        }, $emptyHandler);
         func(true);
         expect(a?.value, 2);
         expect(b?.value, 1);
@@ -102,7 +102,7 @@ void main() {
         final refs = <$Ref>[];
         final func = $bind((value) {
           refs.add($ref(() => value));
-        }, (_) {});
+        }, $emptyHandler);
         func(1);
         func(2);
         expect(refs[0], refs[1]);
@@ -115,7 +115,7 @@ void main() {
         final effects = <$UpdateVar>[];
         final func = $bind((_) {
           return $var(() => 1);
-        }, effects.add);
+        }, (_) => effects.add);
         var v = func(null);
         v.value = 2;
         expect(effects.length, 1);
@@ -131,7 +131,7 @@ void main() {
         var value = 0;
         final func = $bind((_) {
           return $final(() => ++value);
-        }, (_) {});
+        }, $emptyHandler);
         expect(func(null), 1);
         expect(func(null), 1);
       });
@@ -142,7 +142,7 @@ void main() {
         var value = 0;
         final func = $bind((keep) {
           return $cache(() => ++value, keep);
-        }, (_) {});
+        }, $emptyHandler);
         expect(func(true), 1);
         expect(func(true), 1);
         expect(func(false), 2);
@@ -153,10 +153,9 @@ void main() {
 
     group('prev', () {
       test('should provide previous value', () {
-        final listeners = $Listeners();
         final func = $bind((value) {
           return $prev(value);
-        }, $listenAt(listeners));
+        }, $emptyHandler);
         expect(func(1), null);
         expect(func(2), 1);
         expect(func(3), 2);
@@ -165,10 +164,9 @@ void main() {
 
     group('equals', () {
       test('should return the identicality of value & previous value', () {
-        final listeners = $Listeners();
         final func = $bind((value) {
           return $equals(value);
-        }, $listenAt(listeners));
+        }, $emptyHandler);
         expect(func(1), false);
         expect(func(2), false);
         expect(func(2), true);
@@ -178,10 +176,9 @@ void main() {
 
     group('identical', () {
       test('should return the identicality of value & previous value', () {
-        final listeners = $Listeners();
         final func = $bind((value) {
           return $identical(value);
-        }, $listenAt(listeners));
+        }, $emptyHandler);
         expect(func(1), false);
         expect(func(2), false);
         expect(func(2), true);
@@ -191,10 +188,9 @@ void main() {
 
     group('diff', () {
       test('should provide value and previous value to diff function', () {
-        final listeners = $Listeners();
         final func = $bind((value) {
           return $diff(value, (prev, curr) => (prev ?? 0) + curr);
-        }, $listenAt(listeners));
+        }, $emptyHandler);
         expect(func(1), 1);
         expect(func(2), 3);
         expect(func(2), 4);
@@ -206,7 +202,7 @@ void main() {
       test('should compute value based on previous value', () {
         final func = $bind((_) {
           return $scan((prev) => (prev ?? 0) + 1);
-        }, (_) {});
+        }, $emptyHandler);
         expect(func(null), 1);
         expect(func(null), 2);
         expect(func(null), 3);
@@ -215,13 +211,13 @@ void main() {
 
     group('listen', () {
       test('should emit listener event', () {
-        final effects = <$Effect>[];
+        final effects = [];
         final listener = (int i) {
           return;
         };
         final func = $bind((_) {
           $listen(listener);
-        }, effects.add);
+        }, (_) => effects.add);
         func(null);
         func(null);
         expect(effects.length, 2);
@@ -270,10 +266,31 @@ void main() {
 
   group('utils', () {
     group('combineHandlers', () {
-      test('should call handlers in order', () {
+      test('should call last handler', () {
         final results = <int>[];
-        $combineHandlers([(_) => results.add(1), (_) => results.add(2)])(null);
-        expect(results, [1, 2]);
+        $combineHandlers([
+          (_) => (_) => results.add(1),
+          (_) => (_) => results.add(2),
+        ])(null)(null);
+        expect(results, [2]);
+      });
+      test('should provide lefter handler as parent of right handler', () {
+        final results = <int>[];
+        final handlers = <$EffectHandlerCreator>[];
+        handlers.add((parent) => (_) {});
+        handlers.add((parent) => (_) {
+              results.add(1);
+              parent(_);
+            });
+        handlers.add((parent) => (_) {
+              results.add(2);
+            });
+        handlers.add((parent) => (_) {
+              results.add(3);
+              parent(_);
+            });
+        $combineHandlers(handlers)(null)(null);
+        expect(results, [3, 2]);
       });
     });
     group('listenAt', () {
@@ -312,35 +329,5 @@ void main() {
         expect(results[2].to, 2);
       });
     });
-    group('convergeVars', () {
-      test('should skip one microtask and rerun if a Var is updated', () async {
-        final effects = <$Effect>[];
-        final func = $convergeVars((int value) {
-          final even = $var(() => value);
-          final result = $cursor(() => 0);
-          result.value = even.value;
-          $if(even.value % 2 != 0, () {
-            $fork(() {
-              () async {
-                await Future.microtask(() {});
-                even.value++;
-              }();
-            });
-          });
-          return result.value;
-        }, effects.add);
-        expect(await func(1).take(2).toList(), [1, 2]);
-        expect(effects.length, 2);
-        expect(effects[0] is $AddListener<$End>, true);
-        expect(effects[1] is $UpdateVar<int>, true);
-      });
-    });
   });
-}
-
-class _MockEffect<T> implements $Effect {
-  final $Cursor<T> at;
-  final T value;
-
-  _MockEffect(this.value, this.at);
 }

@@ -1,59 +1,34 @@
-import 'dart:async';
-
 import 'package:dollar/dollar.dart';
 
-$EffectHandler $combineHandlers(Iterable<$EffectHandler> handlers) {
-  return ($Effect effect) {
-    for (final handler in handlers) {
-      if (handler is $EffectHandler) handler(effect);
-    }
+/// combine handlers from right to left
+/// every lefter handler is provided as the parent of the righter handler
+$EffectHandlerCreator $combineHandlers(
+    Iterable<$EffectHandlerCreator> createHandlers) {
+  return createHandlers
+      .reduce((l, r) => ($EffectHandler parent) => r(l(parent)));
+}
+
+$EffectHandlerCreator $listenAt($Listeners listeners) {
+  return (parent) {
+    return (effect) {
+      if (effect is $AddListener) {
+        listeners.add(effect.type, effect.callback, effect.at);
+      } else {
+        parent(effect);
+      }
+    };
   };
 }
 
-$EffectHandler $listenAt($Listeners listeners) {
-  return (effect) {
-    if (effect is $AddListener) {
-      listeners.add(effect.type, effect.callback, effect.at);
-    }
-  };
-}
-
-$EffectHandler $onUpdateVar(void onUpdate($UpdateVar effect)) {
-  return (effect) {
-    if (effect is $UpdateVar) onUpdate(effect);
-  };
-}
-
-Stream<R> Function(T) $convergeVars<T, R>(R func(T params),
-    [$EffectHandler handler]) {
-  final latestInput = _Ref<T>(null);
-  var isInconsistent = false;
-  var didScheduleTask = false;
-
-  final outputController = StreamController<R>();
-  final output = outputController.stream.asBroadcastStream();
-
-  final handleUpdateVar = ($Effect effect) {
-    isInconsistent = isInconsistent || effect is $UpdateVar;
-
-    if (isInconsistent && !didScheduleTask) {
-      didScheduleTask = true;
-      scheduleMicrotask(() {
-        if (!isInconsistent) return;
-        isInconsistent = false;
-        didScheduleTask = false;
-        outputController.add(func(latestInput.value));
-      });
-    }
-  };
-
-  func = $bind(func, $combineHandlers([handleUpdateVar, handler]));
-
-  return (T params) {
-    latestInput.value = params;
-    final result = func(params);
-    if (!isInconsistent) outputController.add(result);
-    return output;
+$EffectHandlerCreator $onUpdateVar(void onUpdate($UpdateVar effect)) {
+  return (parent) {
+    return (effect) {
+      if (effect is $UpdateVar) {
+        onUpdate(effect);
+      } else {
+        parent(effect);
+      }
+    };
   };
 }
 

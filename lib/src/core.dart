@@ -2,17 +2,19 @@ import 'dart:collection';
 
 R Function(A, B, C, D, E, F, G) $bind7<R, A, B, C, D, E, F, G>(
     R func(A a, B b, C c, D d, E e, F f, G g),
-    [$EffectHandler handler]) {
+    [$EffectHandlerCreator createHandler]) {
   // TODO support function with arbitrary signature
+  // TODO nullability of createHandler must be consistent across calls
 
+  final handler =
+      createHandler == null ? _handler : createHandler(_handler ?? (_) {});
+  assert(handler != null);
   final context =
-      handler != null ? _Context() : $cursor(() => _Context()).value;
-  handler ??= _handler;
+      createHandler == null ? $cursor(() => _Context()).value : _Context();
 
   return (A a, B b, C c, D d, E e, F f, G g) {
     context.cursorReset();
 
-    //region Wrap func in bind context
     final prevHandler = _handler;
     final prevContext = _context;
 
@@ -26,15 +28,15 @@ R Function(A, B, C, D, E, F, G) $bind7<R, A, B, C, D, E, F, G>(
 
     _context = prevContext;
     _handler = prevHandler;
-    //endregion
 
     return result;
   };
 }
 
+$EffectHandlerCreator $emptyHandler = (parent) => parent;
+
 $Cursor<T> $cursor<T>(T init()) {
   final $Cursor<T> result = _context.cursor ??= () {
-    //region Init cursor
     final prevContext = _context;
     _context = null;
     final cursor = _$CursorImpl<T>();
@@ -42,7 +44,6 @@ $Cursor<T> $cursor<T>(T init()) {
     assert(_context == null);
     _context = prevContext;
     return cursor;
-    //endregion
   }();
   _context.cursorNext();
   return result;
@@ -71,20 +72,16 @@ T $if<T>(bool condition, T then(), {T orElse()}) {
   return result;
 }
 
-T $effect<T>($Effect createEffect($Cursor cursor)) {
-  final cursor = $cursor<T>(() => null);
+void $effect(Object effect) {
   final prevContext = _context;
   _context = null;
-  if (_handler != null) _handler(createEffect(cursor));
+  if (_handler != null) _handler(effect);
   _context = prevContext;
-  return cursor.value;
 }
 
-abstract class $Effect {
-  $Cursor get at;
-}
+typedef $EffectHandler = void Function(Object effect);
 
-typedef $EffectHandler = void Function($Effect effect);
+typedef $EffectHandlerCreator = $EffectHandler Function($EffectHandler parent);
 
 abstract class $Cursor<T> {
   T get value;
