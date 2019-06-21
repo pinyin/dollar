@@ -19,3 +19,7 @@
 - Add bind support to functions with multiple parameters.
 - Add some extensions & utils.
 - Create new context iff a effect handler is provided.
+
+## 0.1.1
+
+- Make handler interface composable
