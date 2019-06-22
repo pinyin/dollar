@@ -97,7 +97,7 @@ bool $identical<T>(T value) {
   return identical(value, $prev(value));
 }
 
-R $diff<T, R>(T value, R diff(T prev, T curr)) {
+R $interpolate<T, R>(T value, R diff(T prev, T curr)) {
   return diff($prev(value), value);
 }
 

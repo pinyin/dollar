@@ -186,10 +186,10 @@ void main() {
       });
     });
 
-    group('diff', () {
+    group('interpolate', () {
       test('should provide value and previous value to diff function', () {
         final func = $bind((value) {
-          return $diff(value, (prev, curr) => (prev ?? 0) + curr);
+          return $interpolate(value, (prev, curr) => (prev ?? 0) + curr);
         }, $emptyHandler);
         expect(func(1), 1);
         expect(func(2), 3);
