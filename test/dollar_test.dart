@@ -209,6 +209,23 @@ void main() {
       });
     });
 
+    group('memo', () {
+      test('should recompute when dependencies changed', () {
+        var deps = [1, 2];
+        final func = $bind((_) {
+          var init = $cursor(() => 0);
+          return $memo(() => ++init.value, deps);
+        }, $emptyHandler);
+        expect(func(null), 1);
+        expect(func(null), 1);
+        deps = [2, 2];
+        expect(func(null), 2);
+        expect(func(null), 2);
+        deps = [2, 3];
+        expect(func(null), 3);
+      });
+    });
+
     group('listen', () {
       test('should emit listener event', () {
         final effects = [];

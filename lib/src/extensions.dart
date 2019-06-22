@@ -107,6 +107,10 @@ T $scan<T>(T compute(T prev)) {
   return cursor.value;
 }
 
+T $memo<T>(T compute(), Iterable deps) {
+  return $cache(compute, _iterableEquals(deps, $prev(deps)));
+}
+
 void $fork(Function() work()) {
   final cleanup = $cursor<Function()>(() => null);
 
@@ -197,3 +201,17 @@ class $AddListener<T> {
 }
 
 class $End {}
+
+// copied from package:collection
+bool _iterableEquals<E>(Iterable<E> elements1, Iterable<E> elements2) {
+  if (identical(elements1, elements2)) return true;
+  if (elements1 == null || elements2 == null) return false;
+  var it1 = elements1.iterator;
+  var it2 = elements2.iterator;
+  while (true) {
+    bool hasNext = it1.moveNext();
+    if (hasNext != it2.moveNext()) return false;
+    if (!hasNext) return true;
+    if (it1.current != it2.current) return false;
+  }
+}
