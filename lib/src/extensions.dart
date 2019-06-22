@@ -121,9 +121,8 @@ void $fork(Function() work()) {
 }
 
 void $listen<T>(void callback(T event)) {
-  final latestCallback = $ref(callback);
   final cursor = $cursor(() => null);
-  final listener = $bind((T event) => latestCallback.value(event));
+  final listener = $bind(callback);
   $effect($AddListener(listener, cursor));
 }
 
