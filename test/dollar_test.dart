@@ -198,10 +198,10 @@ void main() {
       });
     });
 
-    group('scan', () {
+    group('generate', () {
       test('should compute value based on previous value', () {
         final func = $bind((_) {
-          return $scan((prev) => (prev ?? 0) + 1);
+          return $generate((prev) => (prev ?? 0) + 1);
         }, $emptyHandler);
         expect(func(null), 1);
         expect(func(null), 2);

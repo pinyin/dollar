@@ -101,7 +101,7 @@ R $interpolate<T, R>(T value, R diff(T prev, T curr)) {
   return diff($prev(value), value);
 }
 
-T $scan<T>(T compute(T prev)) {
+T $generate<T>(T compute(T prev)) {
   final cursor = $cursor<T>(() => null);
   cursor.value = compute(cursor.value);
   return cursor.value;
