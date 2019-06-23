@@ -33,20 +33,21 @@ R Function(A, B, C, D, E, F, G) $bind7<R, A, B, C, D, E, F, G>(
   };
 }
 
-void $unbind(void func()) {
+T $unbind<T>(T func()) {
   final prevHandler = _handler;
   final prevContext = _context;
 
   _handler = null;
   _context = null;
 
-  func();
+  final result = func();
 
   assert(identical(_context, null));
   assert(identical(_handler, null));
 
   _context = prevContext;
   _handler = prevHandler;
+  return result;
 }
 
 $EffectHandlerCreator $emptyHandler = (parent) => parent;

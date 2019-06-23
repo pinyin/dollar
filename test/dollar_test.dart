@@ -42,6 +42,15 @@ void main() {
         }, $emptyHandler);
         expect(func, throwsA(TypeMatcher<NoSuchMethodError>()));
       });
+      test('should keep return value of inner function', () {
+        final func = $bind((value) {
+          return $unbind(() {
+            return value;
+          });
+        }, $emptyHandler);
+        expect(func(1), 1);
+        expect(func(3), 3);
+      });
     });
     group('cursor', () {
       test('should keep value across calls', () {
