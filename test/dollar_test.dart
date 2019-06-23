@@ -14,7 +14,7 @@ void main() {
         func();
         expect(effects, [1, 2]);
       });
-      test('should create new ref context', () {
+      test('should create new cursor context', () {
         final effects = [];
         final func = $bind0(() {
           $effect(1);
@@ -30,19 +30,6 @@ void main() {
         effects.clear();
         func();
         expect(effects, [1, 2, 3, 4]);
-      });
-      test('should create new context iff handler is not null', () {
-        final func = $bind((branch) {
-          if (branch) {
-            $bind0(() {
-              $cursor(() => 1);
-            }, (_) => (_) {})();
-          }
-          $cursor(() => 'a');
-        }, $emptyHandler);
-        func(true);
-        func(false);
-        func(true);
       });
     });
     group('cursor', () {

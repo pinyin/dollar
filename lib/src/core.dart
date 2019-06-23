@@ -10,7 +10,7 @@ R Function(A, B, C, D, E, F, G) $bind7<R, A, B, C, D, E, F, G>(
       createHandler == null ? _handler : createHandler(_handler ?? (_) {});
   assert(handler != null);
   final context =
-      createHandler == null ? $cursor(() => _Context()).value : _Context();
+      _handler != null ? $cursor(() => _Context()).value : _Context();
 
   return (A a, B b, C c, D d, E e, F f, G g) {
     context.cursorReset();
