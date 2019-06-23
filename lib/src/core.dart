@@ -33,6 +33,22 @@ R Function(A, B, C, D, E, F, G) $bind7<R, A, B, C, D, E, F, G>(
   };
 }
 
+void $unbind(void func()) {
+  final prevHandler = _handler;
+  final prevContext = _context;
+
+  _handler = null;
+  _context = null;
+
+  func();
+
+  assert(identical(_context, null));
+  assert(identical(_handler, null));
+
+  _context = prevContext;
+  _handler = prevHandler;
+}
+
 $EffectHandlerCreator $emptyHandler = (parent) => parent;
 
 $Cursor<T> $cursor<T>(T init()) {
@@ -73,10 +89,10 @@ T $if<T>(bool condition, T then(), {T orElse()}) {
 }
 
 void $effect(Object effect) {
-  final prevContext = _context;
-  _context = null;
-  if (_handler != null) _handler(effect);
-  _context = prevContext;
+  final handler = _handler;
+  $unbind(() {
+    handler(effect);
+  });
 }
 
 typedef $EffectHandler = void Function(Object effect);

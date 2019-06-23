@@ -32,6 +32,17 @@ void main() {
         expect(effects, [1, 2, 3, 4]);
       });
     });
+    group('unbind', () {
+      test('should hide context form callback', () {
+        final func = $bind0(() {
+          $effect(1);
+          $unbind(() {
+            $effect(2);
+          });
+        }, $emptyHandler);
+        expect(func, throwsA(TypeMatcher<NoSuchMethodError>()));
+      });
+    });
     group('cursor', () {
       test('should keep value across calls', () {
         $Cursor<int> cursor;

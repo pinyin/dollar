@@ -32,11 +32,6 @@ $EffectHandlerCreator $onUpdateVar(void onUpdate($UpdateVar effect)) {
   };
 }
 
-class _Ref<T> {
-  T value;
-  _Ref(this.value);
-}
-
 class $Listeners {
   add(Type eventType, Function callback, $Cursor at) {
     assert(_types[at] == null || _types[at] == eventType);
