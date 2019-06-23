@@ -54,12 +54,8 @@ $EffectHandlerCreator $emptyHandler = (parent) => parent;
 
 $Cursor<T> $cursor<T>(T init()) {
   final $Cursor<T> result = _context.cursor ??= () {
-    final prevContext = _context;
-    _context = null;
     final cursor = _$CursorImpl<T>();
-    cursor.value = init();
-    assert(_context == null);
-    _context = prevContext;
+    cursor.value = $unbind(init);
     return cursor;
   }();
   _context.cursorNext();
