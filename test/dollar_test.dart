@@ -31,7 +31,7 @@ void main() {
         func();
         expect(effects, [1, 2, 3, 4]);
       });
-      test('should create new context iff handler is not ', () {
+      test('should create new context iff handler is not null', () {
         final func = $bind((branch) {
           if (branch) {
             $bind0(() {
@@ -46,7 +46,7 @@ void main() {
       });
     });
     group('cursor', () {
-      test('should keep updates across calls', () {
+      test('should keep value across calls', () {
         $Cursor<int> cursor;
         final func = $bind0(() {
           cursor = $cursor(() => 1);
@@ -60,7 +60,7 @@ void main() {
       });
     });
     group('if', () {
-      test('should return value in path', () {
+      test('should call function by condition', () {
         final func = $bind((bool input) {
           return $if(input, () {
             return 1;
@@ -69,7 +69,7 @@ void main() {
         expect(func(true), 1);
         expect(func(false), 2);
       });
-      test('should create separated ref context', () {
+      test('should create separated cursor context', () {
         $Cursor<int> a;
         $Cursor<int> b;
         final func = $bind((bool input) {
@@ -111,7 +111,7 @@ void main() {
     });
 
     group('var', () {
-      test('should emit VarEffect', () {
+      test('should emit VarEffect on value update', () {
         final effects = <$UpdateVar>[];
         final func = $bind0(() {
           return $var(() => 1);
