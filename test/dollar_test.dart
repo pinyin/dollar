@@ -186,6 +186,20 @@ void main() {
       });
     });
 
+    group('while', () {
+      test('should run effect as long as condition returns true', () {
+        final func = $bind((int loop) {
+          return $while(() => loop > 0, () {
+            loop--;
+            return ++$cursor(() => 0).value;
+          });
+        }, $emptyHandler);
+        expect(func(2), 2);
+        expect(func(3), 5);
+        expect(func(4), 9);
+      });
+    });
+
     group('interpolate', () {
       test('should provide value and previous value to diff function', () {
         final func = $bind((value) {

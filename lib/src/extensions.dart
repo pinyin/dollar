@@ -104,6 +104,15 @@ bool $identical<T>(T value) {
   return identical(value, $prev(value));
 }
 
+T $while<T>(bool condition(), T compute()) {
+  compute = $bind0(compute);
+  T result;
+  for (; condition();) {
+    result = compute();
+  }
+  return result;
+}
+
 R $interpolate<T, R>(T value, R diff(T prev, T curr)) {
   return diff($prev(value), value);
 }
