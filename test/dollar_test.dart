@@ -6,37 +6,37 @@ void main() {
     group('bind', () {
       test('should forward effects to handler', () {
         final effects = [];
-        final func = $bind((_) {
+        final func = $bind0(() {
           $effect(1);
           $effect(2);
         }, (_) => effects.add);
         expect(effects, []);
-        func(null);
+        func();
         expect(effects, [1, 2]);
       });
       test('should create new ref context', () {
         final effects = [];
-        final func = $bind((_) {
+        final func = $bind0(() {
           $effect(1);
           $effect(2);
-          $bind((_) {
+          $bind0(() {
             $effect(3);
             $effect(4);
-          })(null);
+          })();
         }, (_) => effects.add);
         expect(effects, []);
-        func(null);
+        func();
         expect(effects, [1, 2, 3, 4]);
         effects.clear();
-        func(null);
+        func();
         expect(effects, [1, 2, 3, 4]);
       });
-      test('should create new context iff handler is not null', () {
+      test('should create new context iff handler is not ', () {
         final func = $bind((branch) {
           if (branch) {
-            $bind((_) {
+            $bind0(() {
               $cursor(() => 1);
-            }, (_) => (_) {})(null);
+            }, (_) => (_) {})();
           }
           $cursor(() => 'a');
         }, $emptyHandler);
@@ -48,14 +48,14 @@ void main() {
     group('cursor', () {
       test('should keep updates across calls', () {
         $Cursor<int> cursor;
-        final func = $bind((_) {
+        final func = $bind0(() {
           cursor = $cursor(() => 1);
           $cursor(() => 2);
         }, $emptyHandler);
-        func(null);
+        func();
         expect(cursor?.value, 1);
         cursor.value++;
-        func(null);
+        func();
         expect(cursor?.value, 2);
       });
     });
@@ -113,14 +113,14 @@ void main() {
     group('var', () {
       test('should emit VarEffect', () {
         final effects = <$UpdateVar>[];
-        final func = $bind((_) {
+        final func = $bind0(() {
           return $var(() => 1);
         }, (_) => effects.add);
-        var v = func(null);
+        var v = func();
         v.value = 2;
         expect(effects.length, 1);
         effects.clear();
-        v = func(null);
+        v = func();
         v.value = 3;
         expect(effects.length, 1);
       });
@@ -129,11 +129,11 @@ void main() {
     group('final', () {
       test('should keep value', () {
         var value = 0;
-        final func = $bind((_) {
+        final func = $bind0(() {
           return $final(() => ++value);
         }, $emptyHandler);
-        expect(func(null), 1);
-        expect(func(null), 1);
+        expect(func(), 1);
+        expect(func(), 1);
       });
     });
 
@@ -200,29 +200,29 @@ void main() {
 
     group('generate', () {
       test('should compute value based on previous value', () {
-        final func = $bind((_) {
+        final func = $bind0(() {
           return $generate((prev) => (prev ?? 0) + 1);
         }, $emptyHandler);
-        expect(func(null), 1);
-        expect(func(null), 2);
-        expect(func(null), 3);
+        expect(func(), 1);
+        expect(func(), 2);
+        expect(func(), 3);
       });
     });
 
     group('memo', () {
       test('should recompute when dependencies changed', () {
         var deps = [1, 2];
-        final func = $bind((_) {
+        final func = $bind0(() {
           var init = $cursor(() => 0);
           return $memo(() => ++init.value, deps);
         }, $emptyHandler);
-        expect(func(null), 1);
-        expect(func(null), 1);
+        expect(func(), 1);
+        expect(func(), 1);
         deps = [2, 2];
-        expect(func(null), 2);
-        expect(func(null), 2);
+        expect(func(), 2);
+        expect(func(), 2);
         deps = [2, 3];
-        expect(func(null), 3);
+        expect(func(), 3);
       });
     });
 
@@ -232,11 +232,11 @@ void main() {
         final listener = (int i) {
           return;
         };
-        final func = $bind((_) {
+        final func = $bind0(() {
           $listen(listener);
         }, (_) => effects.add);
-        func(null);
-        func(null);
+        func();
+        func();
         expect(effects.length, 2);
         expect(effects[0].at, effects[1].at);
       });
@@ -247,12 +247,12 @@ void main() {
           final callCount = $cursor(() => 0);
           result = callCount.value += i;
         };
-        final func = $bind((_) {
+        final func = $bind0(() {
           $listen(listener);
         }, $listenAt(listeners));
-        func(null);
+        func();
         listeners.trigger(1);
-        func(null);
+        func();
         expect(result, 1);
       });
     });
@@ -262,16 +262,16 @@ void main() {
         final listeners = $Listeners();
         var closeCount = 0;
         var result = 0;
-        final func = $bind((_) {
+        final func = $bind0(() {
           $fork(() {
             result++;
             return () => closeCount++;
           });
         }, $listenAt(listeners));
-        func(null);
+        func();
         expect(result, 1);
         expect(closeCount, 0);
-        func(null);
+        func();
         expect(result, 2);
         expect(closeCount, 1);
         listeners.trigger($End());
@@ -314,10 +314,10 @@ void main() {
       test('should save listeners in Listeners', () {
         final listeners = $Listeners();
         final results = <int>[];
-        final func = $bind((_) {
+        final func = $bind0(() {
           $listen(results.add);
         }, $listenAt(listeners));
-        func(null);
+        func();
         listeners.trigger(1);
         listeners.trigger(2);
         expect(results, [1, 2]);
@@ -331,12 +331,12 @@ void main() {
     group('onUpdateVar', () {
       test('should call callback on UpdateVar effect', () {
         final results = <$UpdateVar>[];
-        final func = $bind((_) {
+        final func = $bind0(() {
           return $var(() => 0);
         }, $onUpdateVar(results.add));
-        func(null).value = 0;
-        func(null).value = 1;
-        func(null).value = 2;
+        func().value = 0;
+        func().value = 1;
+        func().value = 2;
         expect(results.length, 3);
         expect(results[0].from, 0);
         expect(results[0].to, 0);

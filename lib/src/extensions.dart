@@ -49,6 +49,13 @@ R Function(A) $bind<R, A>(R func(A a), [$EffectHandlerCreator createHandler]) {
   return (a) => inner(a, null, null, null, null, null, null);
 }
 
+R Function() $bind0<R>(R func(), [$EffectHandlerCreator createHandler]) {
+  final inner = $bind7(
+      (void a, void b, void c, void d, void e, void f, void g) => func(),
+      createHandler);
+  return () => inner(null, null, null, null, null, null, null);
+}
+
 $Ref<T> $ref<T>(T value) {
   final cursor = $cursor<_$RefImpl<T>>(() => _$RefImpl(value));
   cursor.value.value = value;
