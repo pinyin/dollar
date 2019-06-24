@@ -23,3 +23,8 @@
 ## 0.1.1
 
 - Make handler interface composable
+
+## 0.2.0
+
+- Separate `$bind` into `$bind` and `$unbind`
+- Add several operators.
