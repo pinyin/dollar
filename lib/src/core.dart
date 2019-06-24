@@ -55,7 +55,9 @@ $EffectHandlerCreator $emptyHandler = (parent) => parent;
 $Cursor<T> $cursor<T>(T init()) {
   final $Cursor<T> result = _context.cursor ??= () {
     final cursor = _$CursorImpl<T>();
-    cursor.value = $unbind(init);
+    cursor.value = $unbind(() {
+      return init();
+    });
     return cursor;
   }();
   _context.cursorNext();
@@ -63,24 +65,24 @@ $Cursor<T> $cursor<T>(T init()) {
 }
 
 T $if<T>(bool condition, T then(), {T orElse()}) {
-  final thenCursors = $cursor(() => _Context());
-  final orElseCursors = $cursor(() => _Context());
+  final thenContext = $cursor(() => _Context());
+  final orElseContext = $cursor(() => _Context());
 
   T result;
 
-  final prevCursors = _context;
+  final prevContext = _context;
   if (condition) {
-    _context = thenCursors.value;
+    _context = thenContext.value;
     _context.cursorReset();
     result = then();
-    assert(identical(_context, thenCursors.value));
+    assert(identical(_context, thenContext.value));
   } else if (orElse != null) {
-    _context = orElseCursors.value;
+    _context = orElseContext.value;
     _context.cursorReset();
     result = orElse();
-    assert(identical(_context, orElseCursors.value));
+    assert(identical(_context, orElseContext.value));
   }
-  _context = prevCursors;
+  _context = prevContext;
 
   return result;
 }

@@ -208,7 +208,8 @@ void main() {
     });
 
     group('interpolate', () {
-      test('should provide value and previous value to diff function', () {
+      test('should provide value and previous value to interpolate function',
+          () {
         final func = $bind((value) {
           return $interpolate(value, (prev, curr) => (prev ?? 0) + curr);
         }, $emptyHandler);
@@ -216,6 +217,19 @@ void main() {
         expect(func(2), 3);
         expect(func(2), 4);
         expect(func(1), 3);
+      });
+    });
+
+    group('aggregate', () {
+      test('should provide value and aggregated value to aggregate function',
+          () {
+        final func = $bind((value) {
+          return $aggregate(value, (prev, curr) => (prev ?? 0) + curr);
+        }, $emptyHandler);
+        expect(func(1), 1);
+        expect(func(2), 3);
+        expect(func(2), 5);
+        expect(func(1), 6);
       });
     });
 

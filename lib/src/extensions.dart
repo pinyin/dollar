@@ -107,7 +107,7 @@ bool $identical<T>(T value) {
 T $while<T>(bool condition(), T compute()) {
   compute = $bind0(compute);
   T result;
-  for (; condition();) {
+  for (; $unbind(() => condition());) {
     result = compute();
   }
   return result;
@@ -115,6 +115,12 @@ T $while<T>(bool condition(), T compute()) {
 
 R $interpolate<T, R>(T value, R diff(T prev, T curr)) {
   return diff($prev(value), value);
+}
+
+R $aggregate<T, R>(T value, R aggregator(R aggreagte, T value)) {
+  final cursor = $cursor<R>(() => null);
+  cursor.value = aggregator(cursor.value, value);
+  return cursor.value;
 }
 
 T $generate<T>(T compute(T prev)) {
