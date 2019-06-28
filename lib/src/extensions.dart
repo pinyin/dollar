@@ -56,6 +56,20 @@ R Function() $bind0<R>(R func(), [$EffectHandlerCreator createHandler]) {
   return () => inner(null, null, null, null, null, null, null);
 }
 
+T $if<T>(bool condition, T then(), {T orElse()}) {
+  then = $bind0(then);
+  orElse = orElse != null ? $bind0(orElse) : null;
+
+  T result;
+  if (condition) {
+    result = then();
+  } else if (orElse != null) {
+    result = orElse();
+  }
+
+  return result;
+}
+
 $Ref<T> $ref<T>(T value) {
   final cursor = $cursor<_$RefImpl<T>>(() => _$RefImpl(value));
   cursor.value.value = value;

@@ -64,29 +64,6 @@ $Cursor<T> $cursor<T>(T init()) {
   return result;
 }
 
-T $if<T>(bool condition, T then(), {T orElse()}) {
-  final thenContext = $cursor(() => _Context());
-  final orElseContext = $cursor(() => _Context());
-
-  T result;
-
-  final prevContext = _context;
-  if (condition) {
-    _context = thenContext.value;
-    _context.cursorReset();
-    result = then();
-    assert(identical(_context, thenContext.value));
-  } else if (orElse != null) {
-    _context = orElseContext.value;
-    _context.cursorReset();
-    result = orElse();
-    assert(identical(_context, orElseContext.value));
-  }
-  _context = prevContext;
-
-  return result;
-}
-
 void $effect(Object effect) {
   final handler = _handler;
   $unbind(() {
