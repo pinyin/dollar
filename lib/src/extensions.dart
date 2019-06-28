@@ -237,6 +237,52 @@ class $AddListener<T> {
 
 class $End {}
 
+$EffectHandlerCreator $onListen($Listeners listeners) {
+  return (parent) {
+    return (effect) {
+      if (effect is $AddListener) {
+        listeners.add(effect.type, effect.callback, effect.at);
+      } else {
+        parent(effect);
+      }
+    };
+  };
+}
+
+$EffectHandlerCreator $onVar(void onUpdate($UpdateVar effect)) {
+  return (parent) {
+    return (effect) {
+      if (effect is $UpdateVar) {
+        onUpdate(effect);
+      } else {
+        parent(effect);
+      }
+    };
+  };
+}
+
+class $Listeners {
+  add(Type eventType, Function callback, $Cursor at) {
+    assert(_types[at] == null || _types[at] == eventType);
+    _types[at] = eventType;
+    (_cursors[eventType] ??= {}).add(at);
+    _callbacks[at] = callback;
+  }
+
+  trigger<T>(T event) {
+    for (final cursor in (_cursors[event.runtimeType] ??= {})) {
+      final callback = _callbacks[cursor];
+      if (callback is Function) {
+        callback(event);
+      }
+    }
+  }
+
+  final _cursors = Map<Type, Set<$Cursor>>();
+  final _callbacks = Map<$Cursor, Function>();
+  final _types = Map<$Cursor, Type>();
+}
+
 // copied from package:collection
 bool _iterableEquals<E>(Iterable<E> elements1, Iterable<E> elements2) {
   if (identical(elements1, elements2)) return true;

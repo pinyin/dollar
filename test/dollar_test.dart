@@ -318,7 +318,7 @@ void main() {
         };
         final func = $bind0(() {
           $listen(listener);
-        }, $listenAt(listeners));
+        }, $onListen(listeners));
         func();
         listeners.trigger(1);
         func();
@@ -336,7 +336,7 @@ void main() {
             result++;
             return () => closeCount++;
           });
-        }, $listenAt(listeners));
+        }, $onListen(listeners));
         func();
         expect(result, 1);
         expect(closeCount, 0);
@@ -385,7 +385,7 @@ void main() {
         final results = <int>[];
         final func = $bind0(() {
           $listen(results.add);
-        }, $listenAt(listeners));
+        }, $onListen(listeners));
         func();
         listeners.trigger(1);
         listeners.trigger(2);
@@ -402,7 +402,7 @@ void main() {
         final results = <$UpdateVar>[];
         final func = $bind0(() {
           return $var(() => 0);
-        }, $onUpdateVar(results.add));
+        }, $onVar(results.add));
         func().value = 0;
         func().value = 1;
         func().value = 2;
