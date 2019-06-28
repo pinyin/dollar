@@ -82,6 +82,23 @@ void main() {
         expect(cursor?.value, 2);
       });
     });
+    group('effect', () {
+      test('should delegate call to handler', () {
+        final effects = [];
+        final func = $bind((int value) {
+          return $effect(value);
+        }, (_) {
+          return (effect) {
+            effects.add(effect);
+            if (effect is int) return effect + 1;
+            return null;
+          };
+        });
+        expect(func(0), 1);
+        expect(func(1), 2);
+        expect(effects, [0, 1]);
+      });
+    });
   });
 
   group('extensions', () {
