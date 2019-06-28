@@ -82,6 +82,9 @@ void main() {
         expect(cursor?.value, 2);
       });
     });
+  });
+
+  group('extensions', () {
     group('if', () {
       test('should call function by condition', () {
         final func = $bind((bool input) {
@@ -117,9 +120,7 @@ void main() {
         expect(b?.value, 1);
       });
     });
-  });
 
-  group('extensions', () {
     group('ref', () {
       test('should keep reference to value', () {
         final refs = <$Ref>[];

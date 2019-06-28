@@ -68,10 +68,10 @@ $Cursor<T> $cursor<T>(T init()) {
   return result;
 }
 
-void $effect(Object effect) {
+dynamic $effect(Object effect) {
   final handler = _handler;
-  $unbind(() {
-    handler(effect);
+  return $unbind(() {
+    return handler(effect);
   });
 }
 
