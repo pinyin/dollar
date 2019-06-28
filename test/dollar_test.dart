@@ -31,6 +31,22 @@ void main() {
         func();
         expect(effects, [1, 2, 3, 4]);
       });
+      test('should forward exception to handler', () {
+        final effects = [];
+        final func = $bind((int value) {
+          throw value;
+          return 1;
+        }, (_) {
+          return (effect) {
+            effects.add(effect);
+            if (effect is $Exception) return 0;
+            return null;
+          };
+        });
+        expect(func(2), 0);
+        expect(func(3), 0);
+        expect(effects, [$Exception(2), $Exception(3)]);
+      });
     });
     group('unbind', () {
       test('should hide context form callback', () {

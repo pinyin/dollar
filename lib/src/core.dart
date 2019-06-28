@@ -17,17 +17,21 @@ R Function(A, B, C, D, E, F, G) $bind7<R, A, B, C, D, E, F, G>(
 
     final prevHandler = _handler;
     final prevContext = _context;
+    R result;
 
-    _handler = handler;
-    _context = context;
+    try {
+      _handler = handler;
+      _context = context;
 
-    final result = func(a, b, c, d, e, f, g);
-
-    assert(identical(_context, context));
-    assert(identical(_handler, handler));
-
-    _context = prevContext;
-    _handler = prevHandler;
+      result = func(a, b, c, d, e, f, g);
+    } catch (e) {
+      result = _handler($Exception(e));
+      assert(identical(_context, context));
+      assert(identical(_handler, handler));
+    } finally {
+      _context = prevContext;
+      _handler = prevHandler;
+    }
 
     return result;
   };
@@ -71,7 +75,7 @@ void $effect(Object effect) {
   });
 }
 
-typedef $EffectHandler = void Function(Object effect);
+typedef $EffectHandler = dynamic Function(Object effect);
 
 typedef $EffectHandlerCreator = $EffectHandler Function($EffectHandler parent);
 
@@ -81,6 +85,22 @@ abstract class $Cursor<T> {
 
   T get() => value;
   T set(T newValue) => value = newValue;
+}
+
+class $Exception {
+  final Object payload;
+
+  @override
+  bool operator ==(other) {
+    return other is $Exception &&
+        other.runtimeType == runtimeType &&
+        other.payload == payload;
+  }
+
+  @override
+  int get hashCode => runtimeType.hashCode ^ payload.hashCode;
+
+  $Exception(this.payload);
 }
 
 class _$CursorImpl<T> extends $Cursor<T> {
