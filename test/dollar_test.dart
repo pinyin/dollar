@@ -348,6 +348,46 @@ void main() {
         expect(closeCount, 2);
       });
     });
+
+    group('rollback', () {
+      test('should call rollback when exception happens', () {
+        int value = 0;
+        final func = $bind((error) {
+          value++;
+          $rollback((_) => --value);
+          if (error != null) throw error;
+          return value;
+        }, $onExceptionRollback());
+        expect(func(null), 1);
+        expect(func(null), 2);
+        expect(func(null), 3);
+        expect(value, 3);
+        expect(func(''), 3);
+        expect(func(''), 3);
+        expect(func(''), 3);
+        expect(value, 3);
+      });
+      test('should handle exception in nested binded functions', () {
+        int value = 0;
+        Function emitError;
+        final func = $bind0(() {
+          value++;
+          $rollback((_) => --value);
+          emitError = $bind0(() {
+            $rollback((_) => --value);
+            throw '';
+          });
+          return value;
+        }, $onExceptionRollback());
+        func();
+        func();
+        expect(value, 2);
+        expect(emitError, throwsA(''));
+        expect(value, 0);
+        expect(emitError, throwsA(''));
+        expect(value, -1);
+      });
+    });
   });
 
   group('utils', () {

@@ -162,6 +162,11 @@ void $listen<T>(void callback(T event)) {
   $effect($Listened(listener, cursor));
 }
 
+void $rollback<T>(T rollback(Object from)) {
+  final cursor = $cursor(() => null);
+  $effect($Rollback(rollback, cursor));
+}
+
 abstract class $Ref<T> {
   T get value;
 }
@@ -237,25 +242,56 @@ class $Listened<T> {
 
 class $TerminateEffects {}
 
+class $Rollback {
+  final dynamic Function(Object from) rollback;
+  final $Cursor cursor;
+
+  $Rollback(this.rollback, this.cursor);
+}
+
+$EffectHandlerCreator $onExceptionRollback() {
+  final stack = List<dynamic Function(Object from)>();
+  final indexMap = Map<$Cursor, int>();
+
+  return (parent) {
+    return (effect) {
+      if (effect is $Exception) {
+        final result = stack.reversed
+            .fold(effect.payload, (from, rollback) => rollback(from));
+        stack.clear();
+        indexMap.clear();
+        return result;
+      } else if (effect is $Rollback) {
+        final existing = indexMap[effect.cursor];
+        if (existing != null) stack.removeRange(existing, stack.length);
+        indexMap[effect.cursor] = stack.length;
+        stack.add(effect.rollback);
+      } else {
+        return parent(effect);
+      }
+    };
+  };
+}
+
 $EffectHandlerCreator $onListened($Listeners listeners) {
   return (parent) {
     return (effect) {
       if (effect is $Listened) {
         listeners.add(effect.type, effect.callback, effect.at);
       } else {
-        parent(effect);
+        return parent(effect);
       }
     };
   };
 }
 
-$EffectHandlerCreator $onVarUpdated(void onUpdate($VarUpdated effect)) {
+$EffectHandlerCreator $onVarUpdated(dynamic onUpdate($VarUpdated effect)) {
   return (parent) {
     return (effect) {
       if (effect is $VarUpdated) {
-        onUpdate(effect);
+        return onUpdate(effect);
       } else {
-        parent(effect);
+        return parent(effect);
       }
     };
   };

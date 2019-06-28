@@ -6,8 +6,8 @@ R Function(A, B, C, D, E, F, G) $bind7<R, A, B, C, D, E, F, G>(
   // TODO support function with arbitrary signature
   // TODO nullability of createHandler must be consistent across calls
 
-  final handler =
-      createHandler == null ? _handler : createHandler(_handler ?? (_) {});
+  createHandler ??= defaultHandlerCreator;
+  final handler = createHandler(_handler ?? (_) {});
   assert(handler != null);
   final context =
       _handler != null ? $cursor(() => _Context()).value : _Context();
@@ -78,6 +78,14 @@ dynamic $effect(Object effect) {
 typedef $EffectHandler = dynamic Function(Object effect);
 
 typedef $EffectHandlerCreator = $EffectHandler Function($EffectHandler parent);
+
+$EffectHandlerCreator defaultHandlerCreator = (parent) {
+  return (effect) {
+    final result = parent(effect);
+    if (effect is $Exception) throw effect.payload;
+    return result;
+  };
+};
 
 abstract class $Cursor<T> {
   T get value;
