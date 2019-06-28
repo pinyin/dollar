@@ -153,7 +153,7 @@ void $fork(Function() work()) {
   final maybeCleanup = () => $if(cleanup.value != null, cleanup.value);
   maybeCleanup();
   cleanup.value = work();
-  $listen(($End _) => maybeCleanup());
+  $listen(($TerminateEffects _) => maybeCleanup());
 }
 
 void $listen<T>(void callback(T event)) {
@@ -235,7 +235,7 @@ class $Listened<T> {
         type = T;
 }
 
-class $End {}
+class $TerminateEffects {}
 
 $EffectHandlerCreator $onListened($Listeners listeners) {
   return (parent) {
