@@ -55,7 +55,7 @@ void main() {
           $unbind(() {
             $effect(2);
           });
-        }, $emptyHandler);
+        });
         expect(func, throwsA(TypeMatcher<NoSuchMethodError>()));
       });
       test('should keep return value of inner function', () {
@@ -63,7 +63,7 @@ void main() {
           return $unbind(() {
             return value;
           });
-        }, $emptyHandler);
+        });
         expect(func(1), 1);
         expect(func(3), 3);
       });
@@ -74,7 +74,7 @@ void main() {
         final func = $bind0(() {
           cursor = $cursor(() => 1);
           $cursor(() => 2);
-        }, $emptyHandler);
+        });
         func();
         expect(cursor?.value, 1);
         cursor.value++;
@@ -108,7 +108,7 @@ void main() {
           return $if(input, () {
             return 1;
           }, orElse: () => 2);
-        }, $emptyHandler);
+        });
         expect(func(true), 1);
         expect(func(false), 2);
       });
@@ -122,7 +122,7 @@ void main() {
           }, orElse: () => $cursor(() => 3));
           a.value++;
           b.value--;
-        }, $emptyHandler);
+        });
         func(true);
         expect(a?.value, 2);
         expect(b?.value, 1);
@@ -143,7 +143,7 @@ void main() {
         final refs = <$Ref>[];
         final func = $bind((value) {
           refs.add($ref(() => value));
-        }, $emptyHandler);
+        });
         func(1);
         func(2);
         expect(refs[0], refs[1]);
@@ -172,7 +172,7 @@ void main() {
         var value = 0;
         final func = $bind0(() {
           return $final(() => ++value);
-        }, $emptyHandler);
+        });
         expect(func(), 1);
         expect(func(), 1);
       });
@@ -183,7 +183,7 @@ void main() {
         var value = 0;
         final func = $bind((keep) {
           return $cache(() => ++value, keep);
-        }, $emptyHandler);
+        });
         expect(func(true), 1);
         expect(func(true), 1);
         expect(func(false), 2);
@@ -196,7 +196,7 @@ void main() {
       test('should provide previous value', () {
         final func = $bind((value) {
           return $prev(value);
-        }, $emptyHandler);
+        });
         expect(func(1), null);
         expect(func(2), 1);
         expect(func(3), 2);
@@ -207,7 +207,7 @@ void main() {
       test('should return the identicality of value & previous value', () {
         final func = $bind((value) {
           return $equals(value);
-        }, $emptyHandler);
+        });
         expect(func(1), false);
         expect(func(2), false);
         expect(func(2), true);
@@ -219,7 +219,7 @@ void main() {
       test('should return the identicality of value & previous value', () {
         final func = $bind((value) {
           return $identical(value);
-        }, $emptyHandler);
+        });
         expect(func(1), false);
         expect(func(2), false);
         expect(func(2), true);
@@ -234,7 +234,7 @@ void main() {
             loop--;
             return ++$cursor(() => 0).value;
           });
-        }, $emptyHandler);
+        });
         expect(func(2), 2);
         expect(func(3), 5);
         expect(func(4), 9);
@@ -246,7 +246,7 @@ void main() {
           () {
         final func = $bind((value) {
           return $interpolate(value, (prev, curr) => (prev ?? 0) + curr);
-        }, $emptyHandler);
+        });
         expect(func(1), 1);
         expect(func(2), 3);
         expect(func(2), 4);
@@ -259,7 +259,7 @@ void main() {
           () {
         final func = $bind((value) {
           return $aggregate(value, (prev, curr) => (prev ?? 0) + curr);
-        }, $emptyHandler);
+        });
         expect(func(1), 1);
         expect(func(2), 3);
         expect(func(2), 5);
@@ -271,7 +271,7 @@ void main() {
       test('should compute value based on previous value', () {
         final func = $bind0(() {
           return $generate((prev) => (prev ?? 0) + 1);
-        }, $emptyHandler);
+        });
         expect(func(), 1);
         expect(func(), 2);
         expect(func(), 3);
@@ -284,7 +284,7 @@ void main() {
         final func = $bind0(() {
           var init = $cursor(() => 0);
           return $memo(() => ++init.value, deps);
-        }, $emptyHandler);
+        });
         expect(func(), 1);
         expect(func(), 1);
         deps = [2, 2];

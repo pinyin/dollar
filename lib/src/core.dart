@@ -24,10 +24,13 @@ R Function(A, B, C, D, E, F, G) $bind7<R, A, B, C, D, E, F, G>(
       _context = context;
 
       result = func(a, b, c, d, e, f, g);
-    } catch (e) {
-      result = _handler($Exception(e));
+
       assert(identical(_context, context));
       assert(identical(_handler, handler));
+    } catch (e) {
+      _context = null;
+      _handler = null;
+      result = handler($Exception(e));
     } finally {
       _context = prevContext;
       _handler = prevHandler;
@@ -53,8 +56,6 @@ T $unbind<T>(T func()) {
   _handler = prevHandler;
   return result;
 }
-
-$EffectHandlerCreator $emptyHandler = (parent) => parent;
 
 $Cursor<T> $cursor<T>(T init()) {
   final $Cursor<T> result = _context.cursor ??= () {
