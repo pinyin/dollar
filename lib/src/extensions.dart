@@ -82,7 +82,7 @@ $Var<T> $var<T>(T init()) {
   $if(!didInit.value, () {
     cursor.value = _$VarImpl(
       init(),
-      $bind2((T from, T to) => $effect($UpdateVar(from, to, cursor))),
+      $bind2((T from, T to) => $effect($VarUpdated(from, to, cursor))),
     );
     didInit.value = true;
   });
@@ -159,7 +159,7 @@ void $fork(Function() work()) {
 void $listen<T>(void callback(T event)) {
   final cursor = $cursor(() => null);
   final listener = $bind(callback);
-  $effect($AddListener(listener, cursor));
+  $effect($Listened(listener, cursor));
 }
 
 abstract class $Ref<T> {
@@ -197,14 +197,14 @@ class _$VarImpl<T> extends $Var<T> {
   _$VarImpl(T value, this.onUpdate) : _value = value;
 }
 
-class $UpdateVar<T> {
+class $VarUpdated<T> {
   final $Cursor at;
   final T from;
   final T to;
 
   @override
   bool operator ==(other) {
-    return other is $UpdateVar<T> &&
+    return other is $VarUpdated<T> &&
         other.runtimeType == runtimeType &&
         other.at == at;
   }
@@ -212,17 +212,17 @@ class $UpdateVar<T> {
   @override
   int get hashCode => at.hashCode;
 
-  $UpdateVar(this.from, this.to, this.at);
+  $VarUpdated(this.from, this.to, this.at);
 }
 
-class $AddListener<T> {
+class $Listened<T> {
   final $Cursor at;
   final Function callback;
   final Type type;
 
   @override
   bool operator ==(other) {
-    return other is $AddListener<T> &&
+    return other is $Listened<T> &&
         other.runtimeType == runtimeType &&
         other.callback == callback;
   }
@@ -230,17 +230,17 @@ class $AddListener<T> {
   @override
   int get hashCode => runtimeType.hashCode ^ callback.hashCode;
 
-  $AddListener(Function(T) callback, this.at)
+  $Listened(Function(T) callback, this.at)
       : callback = callback,
         type = T;
 }
 
 class $End {}
 
-$EffectHandlerCreator $onListen($Listeners listeners) {
+$EffectHandlerCreator $onListened($Listeners listeners) {
   return (parent) {
     return (effect) {
-      if (effect is $AddListener) {
+      if (effect is $Listened) {
         listeners.add(effect.type, effect.callback, effect.at);
       } else {
         parent(effect);
@@ -249,10 +249,10 @@ $EffectHandlerCreator $onListen($Listeners listeners) {
   };
 }
 
-$EffectHandlerCreator $onVar(void onUpdate($UpdateVar effect)) {
+$EffectHandlerCreator $onVarUpdated(void onUpdate($VarUpdated effect)) {
   return (parent) {
     return (effect) {
-      if (effect is $UpdateVar) {
+      if (effect is $VarUpdated) {
         onUpdate(effect);
       } else {
         parent(effect);

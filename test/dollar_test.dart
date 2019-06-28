@@ -153,7 +153,7 @@ void main() {
 
     group('var', () {
       test('should emit VarEffect on value update', () {
-        final effects = <$UpdateVar>[];
+        final effects = <$VarUpdated>[];
         final func = $bind0(() {
           return $var(() => 1);
         }, (_) => effects.add);
@@ -318,7 +318,7 @@ void main() {
         };
         final func = $bind0(() {
           $listen(listener);
-        }, $onListen(listeners));
+        }, $onListened(listeners));
         func();
         listeners.trigger(1);
         func();
@@ -336,7 +336,7 @@ void main() {
             result++;
             return () => closeCount++;
           });
-        }, $onListen(listeners));
+        }, $onListened(listeners));
         func();
         expect(result, 1);
         expect(closeCount, 0);
@@ -385,7 +385,7 @@ void main() {
         final results = <int>[];
         final func = $bind0(() {
           $listen(results.add);
-        }, $onListen(listeners));
+        }, $onListened(listeners));
         func();
         listeners.trigger(1);
         listeners.trigger(2);
@@ -399,10 +399,10 @@ void main() {
     });
     group('onUpdateVar', () {
       test('should call callback on UpdateVar effect', () {
-        final results = <$UpdateVar>[];
+        final results = <$VarUpdated>[];
         final func = $bind0(() {
           return $var(() => 0);
-        }, $onVar(results.add));
+        }, $onVarUpdated(results.add));
         func().value = 0;
         func().value = 1;
         func().value = 2;
