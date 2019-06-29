@@ -6,7 +6,7 @@ R Function(A, B, C, D, E, F, G) $bind7<R, A, B, C, D, E, F, G>(
   // TODO support function with arbitrary signature
   // TODO nullability of createHandler must be consistent across calls
 
-  createHandler ??= defaultHandlerCreator;
+  createHandler ??= $onExceptionThrow;
   final handler = createHandler(_handler ?? (_) {});
   assert(handler != null);
   final context =
@@ -79,7 +79,7 @@ typedef $EffectHandler = dynamic Function(Object effect);
 
 typedef $EffectHandlerCreator = $EffectHandler Function($EffectHandler parent);
 
-$EffectHandlerCreator defaultHandlerCreator = (parent) {
+$EffectHandlerCreator $onExceptionThrow = (parent) {
   return (effect) {
     final result = parent(effect);
     if (effect is $Exception) throw effect.payload;
