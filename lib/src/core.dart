@@ -29,7 +29,6 @@ R Function(A, B, C, D, E, F, G) $bind7<R, A, B, C, D, E, F, G>(
       assert(identical(_handler, handler));
     } catch (e) {
       _context = null;
-      _handler = null;
       result = handler($Exception(e));
     } finally {
       _context = prevContext;
@@ -70,10 +69,10 @@ $Cursor<T> $cursor<T>(T init()) {
 }
 
 dynamic $effect(Object effect) {
-  final handler = _handler;
-  return $unbind(() {
-    return handler(effect);
-  });
+  final prevContext = _context;
+  final result = _handler(effect);
+  _context = prevContext;
+  return result;
 }
 
 typedef $EffectHandler = dynamic Function(Object effect);
