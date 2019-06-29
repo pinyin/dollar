@@ -387,6 +387,25 @@ void main() {
         expect(emitError, throwsA(''));
         expect(value, -1);
       });
+      test('should stop at latest commit when rollback', () {
+        int value = 0;
+        Function emitError;
+        final func = $bind0(() {
+          value++;
+          $rollback((_) => --value);
+          $commit();
+          emitError = $bind0(() {
+            $rollback((_) => --value);
+            throw '';
+          });
+          return value;
+        }, $onExceptionRollback());
+        func();
+        func();
+        expect(value, 2);
+        expect(emitError, throwsA(''));
+        expect(value, 1);
+      });
     });
   });
 

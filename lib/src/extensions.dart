@@ -167,6 +167,10 @@ void $rollback<T>(T rollback(Object from)) {
   $effect($Rollback(rollback, cursor));
 }
 
+void $commit() {
+  $effect($Commit());
+}
+
 abstract class $Ref<T> {
   T get value;
 }
@@ -249,6 +253,8 @@ class $Rollback {
   $Rollback(this.rollback, this.cursor);
 }
 
+class $Commit {}
+
 $EffectHandlerCreator $onExceptionRollback() {
   final stack = List<dynamic Function(Object from)>();
   final indexMap = Map<$Cursor, int>();
@@ -266,6 +272,9 @@ $EffectHandlerCreator $onExceptionRollback() {
         if (existing != null) stack.removeRange(existing, stack.length);
         indexMap[effect.cursor] = stack.length;
         stack.add(effect.rollback);
+      } else if (effect is $Commit) {
+        stack.clear();
+        indexMap.clear();
       } else {
         return parent(effect);
       }
