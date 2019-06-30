@@ -70,6 +70,7 @@ $Cursor<T> $cursor<T>(T init()) {
 
 dynamic $effect(Object effect) {
   final prevContext = _context;
+  _context = null;
   final result = _handler(effect);
   _context = prevContext;
   return result;
