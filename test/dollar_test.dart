@@ -48,7 +48,7 @@ void main() {
         expect(effects, [$Exception(2), $Exception(3)]);
       });
     });
-    group('unbind', () {
+    group('isolate', () {
       test('should hide context form callback', () {
         final func = $bind0(() {
           $raise(1);
@@ -82,7 +82,7 @@ void main() {
         expect(cursor?.value, 2);
       });
     });
-    group('effect', () {
+    group('raise', () {
       test('should delegate call to handler', () {
         final effects = [];
         final func = $bind((int value) {
@@ -227,6 +227,19 @@ void main() {
       });
     });
 
+    group('shallowEquals', () {
+      test('should return the shallow identicality of value & previous value',
+          () {
+        final func = $bind((value) {
+          return $shallowEquals(value);
+        });
+        expect(func([1, 2]), false);
+        expect(func([1, 2]), true);
+        expect(func([1]), false);
+        expect(func([3]), false);
+      });
+    });
+
     group('while', () {
       test('should run effect as long as condition returns true', () {
         final func = $bind((int loop) {
@@ -341,6 +354,32 @@ void main() {
         expect(result, 1);
         expect(closeCount, 0);
         func();
+        expect(result, 2);
+        expect(closeCount, 1);
+        listeners.trigger($ContextTerminated());
+        expect(result, 2);
+        expect(closeCount, 2);
+      });
+    });
+
+    group('effect', () {
+      test('should run one instance of work when deps are updated', () {
+        final listeners = $Listeners();
+        var closeCount = 0;
+        var result = 0;
+        final func = $bind((deps) {
+          $effect(() {
+            result++;
+            return () => closeCount++;
+          }, deps);
+        }, $onListened(listeners));
+        func([0, 1]);
+        expect(result, 1);
+        expect(closeCount, 0);
+        func([0, 1]);
+        expect(result, 1);
+        expect(closeCount, 0);
+        func([1, 1]);
         expect(result, 2);
         expect(closeCount, 1);
         listeners.trigger($ContextTerminated());

@@ -118,6 +118,10 @@ bool $identical<T>(T value) {
   return identical(value, $prev(value));
 }
 
+bool $shallowEquals(Iterable value) {
+  return _iterableEquals(value, $prev(value));
+}
+
 T $while<T>(bool condition(), T compute()) {
   compute = $bind0(compute);
   T result;
@@ -144,7 +148,7 @@ T $generate<T>(T compute(T prev)) {
 }
 
 T $memo<T>(T compute(), Iterable deps) {
-  return $cache(compute, _iterableEquals(deps, $prev(deps)));
+  return $cache(compute, $shallowEquals(deps));
 }
 
 void $fork(Function() work()) {
@@ -154,6 +158,12 @@ void $fork(Function() work()) {
   maybeCleanup();
   cleanup.value = work();
   $listen(($ContextTerminated _) => maybeCleanup());
+}
+
+void $effect(Function() effect(), Iterable deps) {
+  $if(!$shallowEquals(deps), () {
+    $fork(effect);
+  });
 }
 
 void $listen<T>(void callback(T event)) {
