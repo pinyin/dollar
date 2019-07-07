@@ -82,7 +82,7 @@ $Var<T> $var<T>(T init()) {
   $if(!didInit.value, () {
     cursor.value = _$VarImpl(
       init(),
-      $bind2((T from, T to) => $effect($VarUpdated(from, to, cursor))),
+      $bind2((T from, T to) => $raise($VarUpdated(from, to, cursor))),
     );
     didInit.value = true;
   });
@@ -121,7 +121,7 @@ bool $identical<T>(T value) {
 T $while<T>(bool condition(), T compute()) {
   compute = $bind0(compute);
   T result;
-  for (; $unbind(() => condition());) {
+  for (; $isolate(() => condition());) {
     result = compute();
   }
   return result;
@@ -159,16 +159,16 @@ void $fork(Function() work()) {
 void $listen<T>(void callback(T event)) {
   final cursor = $cursor(() => null);
   final listener = $bind(callback);
-  $effect($Listened(listener, cursor));
+  $raise($Listened(listener, cursor));
 }
 
 void $rollback<T>(T rollback(Object from)) {
   final cursor = $cursor(() => null);
-  $effect($Rollback(rollback, cursor));
+  $raise($Rollback(rollback, cursor));
 }
 
 void $commit() {
-  $effect($Commit());
+  $raise($Commit());
 }
 
 abstract class $Ref<T> {

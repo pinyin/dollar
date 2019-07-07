@@ -7,8 +7,8 @@ void main() {
       test('should forward effects to handler', () {
         final effects = [];
         final func = $bind0(() {
-          $effect(1);
-          $effect(2);
+          $raise(1);
+          $raise(2);
         }, (_) => effects.add);
         expect(effects, []);
         func();
@@ -17,11 +17,11 @@ void main() {
       test('should create new cursor context', () {
         final effects = [];
         final func = $bind0(() {
-          $effect(1);
-          $effect(2);
+          $raise(1);
+          $raise(2);
           $bind0(() {
-            $effect(3);
-            $effect(4);
+            $raise(3);
+            $raise(4);
           })();
         }, (_) => effects.add);
         expect(effects, []);
@@ -51,16 +51,16 @@ void main() {
     group('unbind', () {
       test('should hide context form callback', () {
         final func = $bind0(() {
-          $effect(1);
-          $unbind(() {
-            $effect(2);
+          $raise(1);
+          $isolate(() {
+            $raise(2);
           });
         });
         expect(func, throwsA(TypeMatcher<NoSuchMethodError>()));
       });
       test('should keep return value of inner function', () {
         final func = $bind((value) {
-          return $unbind(() {
+          return $isolate(() {
             return value;
           });
         });
@@ -86,7 +86,7 @@ void main() {
       test('should delegate call to handler', () {
         final effects = [];
         final func = $bind((int value) {
-          return $effect(value);
+          return $raise(value);
         }, (_) {
           return (effect) {
             effects.add(effect);

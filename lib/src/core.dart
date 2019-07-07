@@ -39,7 +39,7 @@ R Function(A, B, C, D, E, F, G) $bind7<R, A, B, C, D, E, F, G>(
   };
 }
 
-T $unbind<T>(T func()) {
+T $isolate<T>(T func()) {
   final prevHandler = _handler;
   final prevContext = _context;
 
@@ -59,7 +59,7 @@ T $unbind<T>(T func()) {
 $Cursor<T> $cursor<T>(T init()) {
   final $Cursor<T> result = _context.cursor ??= () {
     final cursor = _$CursorImpl<T>();
-    cursor.value = $unbind(() {
+    cursor.value = $isolate(() {
       return init();
     });
     return cursor;
@@ -68,7 +68,7 @@ $Cursor<T> $cursor<T>(T init()) {
   return result;
 }
 
-dynamic $effect(Object effect) {
+dynamic $raise(Object effect) {
   final prevContext = _context;
   _context = null;
   final result = _handler(effect);
