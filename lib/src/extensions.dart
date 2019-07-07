@@ -93,7 +93,12 @@ T $cache<T>(T compute(), bool reusable) {
   final didInit = $cursor(() => false);
   final cursor = $cursor<T>(() => null);
   $if(!didInit.value || !reusable, () {
-    cursor.value = compute();
+    cursor.value = $bind0(compute, (parent) {
+      return (effect) {
+        if (effect is $VarUpdated) didInit.value = false;
+        parent(effect);
+      };
+    })();
     didInit.value = true;
   });
   return cursor.value;
