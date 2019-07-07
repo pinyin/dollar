@@ -153,7 +153,7 @@ void $fork(Function() work()) {
   final maybeCleanup = () => $if(cleanup.value != null, cleanup.value);
   maybeCleanup();
   cleanup.value = work();
-  $listen(($TerminateEffects _) => maybeCleanup());
+  $listen(($ContextTerminated _) => maybeCleanup());
 }
 
 void $listen<T>(void callback(T event)) {
@@ -244,7 +244,7 @@ class $Listened<T> {
         type = T;
 }
 
-class $TerminateEffects {}
+class $ContextTerminated {}
 
 class $Rollback {
   final dynamic Function(Object from) rollback;

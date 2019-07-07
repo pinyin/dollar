@@ -343,7 +343,7 @@ void main() {
         func();
         expect(result, 2);
         expect(closeCount, 1);
-        listeners.trigger($TerminateEffects());
+        listeners.trigger($ContextTerminated());
         expect(result, 2);
         expect(closeCount, 2);
       });
