@@ -166,9 +166,7 @@ void $fork(Function() work()) {
 }
 
 void $effect(Function() effect(), Iterable deps) {
-  $if(!$shallowEquals(deps), () {
-    $fork(effect);
-  });
+  $memo(() => $fork(effect), deps);
 }
 
 void $listen<T>(void callback(T event)) {
