@@ -70,6 +70,10 @@ T $if<T>(bool condition, T then(), {T orElse()}) {
   return result;
 }
 
+T $unless<T>(bool condition, T run()) {
+  return $if(!condition, run);
+}
+
 $Ref<T> $ref<T>(T value) {
   final cursor = $cursor<_$RefImpl<T>>(() => _$RefImpl(value));
   cursor.value.value = value;

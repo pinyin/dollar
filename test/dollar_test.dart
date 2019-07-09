@@ -138,6 +138,18 @@ void main() {
       });
     });
 
+    group('unless', () {
+      test('should call function when condition is not matched', () {
+        final func = $bind((bool input) {
+          return $unless(input, () {
+            return 1;
+          });
+        });
+        expect(func(true), null);
+        expect(func(false), 1);
+      });
+    });
+
     group('ref', () {
       test('should keep reference to value', () {
         final refs = <$Ref>[];
