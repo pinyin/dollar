@@ -7,7 +7,10 @@ R Function(A, B, C, D, E, F, G) $bind7<R, A, B, C, D, E, F, G>(
   // TODO nullability of createHandler must be consistent across calls
 
   createHandler ??= $onExceptionThrow;
-  final handler = createHandler(_handler ?? (_) {});
+  final handler = createHandler(_handler ??
+      (effect) {
+        if (effect is $Exception) throw effect;
+      });
   assert(handler != null);
   final context =
       _handler != null ? $cursor(() => _Context()).value : _Context();
