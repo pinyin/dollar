@@ -272,33 +272,6 @@ class $Rollback {
 
 class $Commit {}
 
-$EffectHandlerCreator $onExceptionRollback() {
-  final stack = List<dynamic Function(Object from)>();
-  final indexMap = Map<$Cursor, int>();
-
-  return (parent) {
-    return (effect) {
-      if (effect is $Exception) {
-        final result = stack.reversed
-            .fold(effect.payload, (from, rollback) => rollback(from));
-        stack.clear();
-        indexMap.clear();
-        return result;
-      } else if (effect is $Rollback) {
-        final existing = indexMap[effect.cursor];
-        if (existing != null) stack.removeRange(existing, stack.length);
-        indexMap[effect.cursor] = stack.length;
-        stack.add(effect.rollback);
-      } else if (effect is $Commit) {
-        stack.clear();
-        indexMap.clear();
-      } else {
-        return parent(effect);
-      }
-    };
-  };
-}
-
 $EffectHandlerCreator $onListened($Listeners listeners) {
   return (parent) {
     return (effect) {

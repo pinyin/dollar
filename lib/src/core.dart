@@ -6,11 +6,8 @@ R Function(A, B, C, D, E, F, G) $bind7<R, A, B, C, D, E, F, G>(
   // TODO support function with arbitrary signature
   // TODO nullability of createHandler must be consistent across calls
 
-  createHandler ??= $onExceptionThrow;
-  final handler = createHandler(_handler ??
-      (effect) {
-        if (effect is $Exception) throw effect;
-      });
+  createHandler ??= (parent) => (effect) => {parent(effect)};
+  final handler = createHandler(_handler ?? (effect) {});
   assert(handler != null);
   final context =
       _handler != null ? $cursor(() => _Context()).value : _Context();
@@ -30,9 +27,6 @@ R Function(A, B, C, D, E, F, G) $bind7<R, A, B, C, D, E, F, G>(
 
       assert(identical(_context, context));
       assert(identical(_handler, handler));
-    } catch (e) {
-      _context = null;
-      result = handler($Exception(e));
     } finally {
       _context = prevContext;
       _handler = prevHandler;
@@ -83,36 +77,12 @@ typedef $EffectHandler = dynamic Function(Object effect);
 
 typedef $EffectHandlerCreator = $EffectHandler Function($EffectHandler parent);
 
-$EffectHandlerCreator $onExceptionThrow = (parent) {
-  return (effect) {
-    final result = parent(effect);
-    if (effect is $Exception) throw effect.payload;
-    return result;
-  };
-};
-
 abstract class $Cursor<T> {
   T get value;
   set value(T newValue);
 
   T get() => value;
   T set(T newValue) => value = newValue;
-}
-
-class $Exception {
-  final Object payload;
-
-  @override
-  bool operator ==(other) {
-    return other is $Exception &&
-        other.runtimeType == runtimeType &&
-        other.payload == payload;
-  }
-
-  @override
-  int get hashCode => runtimeType.hashCode ^ payload.hashCode;
-
-  $Exception(this.payload);
 }
 
 class _$CursorImpl<T> extends $Cursor<T> {

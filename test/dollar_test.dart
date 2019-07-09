@@ -31,22 +31,6 @@ void main() {
         func();
         expect(effects, [1, 2, 3, 4]);
       });
-      test('should forward exception to handler', () {
-        final effects = [];
-        final func = $bind((int value) {
-          throw value;
-          return 1;
-        }, (_) {
-          return (effect) {
-            effects.add(effect);
-            if (effect is $Exception) return 0;
-            return null;
-          };
-        });
-        expect(func(2), 0);
-        expect(func(3), 0);
-        expect(effects, [$Exception(2), $Exception(3)]);
-      });
     });
     group('isolate', () {
       test('should hide context form callback', () {
@@ -420,65 +404,6 @@ void main() {
         listeners.trigger($ContextTerminated());
         expect(result, 2);
         expect(closeCount, 2);
-      });
-    });
-
-    group('rollback', () {
-      test('should call rollback when exception happens', () {
-        int value = 0;
-        final func = $bind((error) {
-          value++;
-          $rollback((_) => --value);
-          if (error != null) throw error;
-          return value;
-        }, $onExceptionRollback());
-        expect(func(null), 1);
-        expect(func(null), 2);
-        expect(func(null), 3);
-        expect(value, 3);
-        expect(func(''), 3);
-        expect(func(''), 3);
-        expect(func(''), 3);
-        expect(value, 3);
-      });
-      test('should handle exception in nested binded functions', () {
-        int value = 0;
-        Function emitError;
-        final func = $bind0(() {
-          value++;
-          $rollback((_) => --value);
-          emitError = $bind0(() {
-            $rollback((_) => --value);
-            throw '';
-          });
-          return value;
-        }, $onExceptionRollback());
-        func();
-        func();
-        expect(value, 2);
-        expect(emitError, throwsA(''));
-        expect(value, 0);
-        expect(emitError, throwsA(''));
-        expect(value, -1);
-      });
-      test('should stop at latest commit when rollback', () {
-        int value = 0;
-        Function emitError;
-        final func = $bind0(() {
-          value++;
-          $rollback((_) => --value);
-          $commit();
-          emitError = $bind0(() {
-            $rollback((_) => --value);
-            throw '';
-          });
-          return value;
-        }, $onExceptionRollback());
-        func();
-        func();
-        expect(value, 2);
-        expect(emitError, throwsA(''));
-        expect(value, 1);
       });
     });
   });
