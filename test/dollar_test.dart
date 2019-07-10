@@ -32,6 +32,7 @@ void main() {
         expect(effects, [1, 2, 3, 4]);
       });
     });
+
     group('isolate', () {
       test('should hide context form callback', () {
         final func = $bind0(() {
@@ -52,6 +53,7 @@ void main() {
         expect(func(3), 3);
       });
     });
+
     group('cursor', () {
       test('should keep value across calls', () {
         $Cursor<int> cursor;
@@ -66,6 +68,30 @@ void main() {
         expect(cursor?.value, 2);
       });
     });
+
+    group('defer', () {
+      test('should run callback after function exits', () {
+        int runCount = 0;
+        int deferCount = 0;
+        final func = $bind((bool shouldThrow) {
+          $defer(() {
+            deferCount++;
+          });
+          if (shouldThrow) throw 1;
+          runCount++;
+        });
+        func(false);
+        expect(runCount, 1);
+        expect(deferCount, 1);
+        expect(() => func(true), throwsA(1));
+        expect(runCount, 1);
+        expect(deferCount, 2);
+        func(false);
+        expect(runCount, 2);
+        expect(deferCount, 3);
+      });
+    });
+
     group('raise', () {
       test('should delegate call to handler', () {
         final effects = [];

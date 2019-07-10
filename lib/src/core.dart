@@ -17,17 +17,29 @@ R Function(A, B, C, D, E, F, G) $bind7<R, A, B, C, D, E, F, G>(
 
     final prevHandler = _handler;
     final prevContext = _context;
+    final prevDeferred = _deferred;
     R result;
 
     try {
       _handler = handler;
       _context = context;
+      _deferred = null;
 
       result = func(a, b, c, d, e, f, g);
 
       assert(identical(_context, context));
       assert(identical(_handler, handler));
     } finally {
+      if (_deferred != null) {
+        for (final cleanup in _deferred.values) {
+          try {
+            cleanup();
+          } catch (e) {
+            ;
+          }
+        }
+      }
+      _deferred = prevDeferred;
       _context = prevContext;
       _handler = prevHandler;
     }
@@ -71,6 +83,11 @@ dynamic $raise(Object effect) {
   final result = _handler(effect);
   _context = prevContext;
   return result;
+}
+
+void $defer(void callback()) {
+  _deferred ??= LinkedHashMap();
+  _deferred[$cursor(() => null)] = callback;
 }
 
 typedef $EffectHandler = dynamic Function(Object effect);
@@ -128,5 +145,7 @@ class _$CursorInContext extends LinkedListEntry<_$CursorInContext> {
 }
 
 _Context _context;
+
+LinkedHashMap<$Cursor, Function()> _deferred;
 
 $EffectHandler _handler;
