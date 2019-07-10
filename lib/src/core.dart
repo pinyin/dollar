@@ -32,11 +32,7 @@ R Function(A, B, C, D, E, F, G) $bind7<R, A, B, C, D, E, F, G>(
     } finally {
       if (_deferred != null) {
         for (final cleanup in _deferred.values) {
-          try {
             cleanup();
-          } catch (e) {
-            ;
-          }
         }
       }
       _deferred = prevDeferred;
