@@ -57,17 +57,11 @@ R Function() $bind0<R>(R func(), [$EffectHandlerCreator createHandler]) {
 }
 
 T $if<T>(bool condition, T then(), {T orElse()}) {
-  then = $bind0(then);
-  orElse = orElse != null ? $bind0(orElse) : null;
-
-  T result;
-  if (condition) {
-    result = then();
-  } else if (orElse != null) {
-    result = orElse();
-  }
-
-  return result;
+  return $fork(condition, () {
+    return condition
+        ? then != null ? then() : null
+        : orElse != null ? orElse() : null;
+  });
 }
 
 T $unless<T>(bool condition, T run()) {
@@ -160,7 +154,7 @@ T $memo<T>(T compute(), Iterable deps) {
   return $cache(compute, $shallowEquals(deps));
 }
 
-void $fork(Function() work()) {
+void $async(Function() work()) {
   final cleanup = $cursor<Function()>(() => null);
 
   final maybeCleanup = () => $if(cleanup.value != null, cleanup.value);
@@ -170,7 +164,7 @@ void $fork(Function() work()) {
 }
 
 void $effect(Function() effect(), Iterable deps) {
-  $memo(() => $fork(effect), deps);
+  $memo(() => $async(effect), deps);
 }
 
 void $listen<T>(void callback(T event)) {

@@ -32,7 +32,7 @@ R Function(A, B, C, D, E, F, G) $bind7<R, A, B, C, D, E, F, G>(
     } finally {
       if (_deferred != null) {
         for (final cleanup in _deferred.values) {
-            cleanup();
+          cleanup();
         }
       }
       _deferred = prevDeferred;
@@ -47,15 +47,18 @@ R Function(A, B, C, D, E, F, G) $bind7<R, A, B, C, D, E, F, G>(
 T $isolate<T>(T func()) {
   final prevHandler = _handler;
   final prevContext = _context;
+  final prevDeferred = _deferred;
 
   _handler = null;
   _context = null;
+  _deferred = null;
 
   final result = func();
 
   assert(identical(_context, null));
   assert(identical(_handler, null));
 
+  _deferred = prevDeferred;
   _context = prevContext;
   _handler = prevHandler;
   return result;
@@ -70,6 +73,18 @@ $Cursor<T> $cursor<T>(T init()) {
     return cursor;
   }();
   _context.cursorNext();
+  return result;
+}
+
+T $fork<T>(Object key, T logic()) {
+  final contexts = $cursor(() => Map<Object, _Context>()).value;
+
+  final prevContext = _context;
+  _context = contexts[key] ??= _Context();
+  _context.cursorReset();
+  final result = logic();
+  _context = prevContext;
+
   return result;
 }
 

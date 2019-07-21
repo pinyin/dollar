@@ -69,6 +69,21 @@ void main() {
       });
     });
 
+    group('fork', () {
+      test('should provide multiple contexts based on key', () {
+        final func = $bind((key) {
+          return $fork(key, () {
+            return $cursor(() => 0);
+          });
+        });
+        func(0).value++;
+        func(2).value = 2;
+        expect(func(0).value, 1);
+        expect(func(1).value, 0);
+        expect(func(2).value, 2);
+      });
+    });
+
     group('defer', () {
       test('should run callback after function exits', () {
         int runCount = 0;
@@ -384,13 +399,13 @@ void main() {
       });
     });
 
-    group('fork', () {
+    group('async', () {
       test('should run one instance of work', () {
         final listeners = $Listeners();
         var closeCount = 0;
         var result = 0;
         final func = $bind0(() {
-          $fork(() {
+          $async(() {
             result++;
             return () => closeCount++;
           });
