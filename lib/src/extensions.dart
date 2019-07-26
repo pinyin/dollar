@@ -56,6 +56,10 @@ R Function() $bind0<R>(R func(), [$EffectHandlerCreator createHandler]) {
   return () => inner(null, null, null, null, null, null, null);
 }
 
+R $switch<T, R>(T value, Map<T, R Function()> handlers) {
+  return $fork(value, handlers[value]);
+}
+
 T $if<T>(bool condition, T then(), {T orElse()}) {
   return $fork(condition, () {
     return condition

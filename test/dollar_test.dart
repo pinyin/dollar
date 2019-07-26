@@ -163,6 +163,27 @@ void main() {
       });
     });
 
+    group('switch', () {
+      test('should call function by value', () {
+        final values = [];
+        final func = $bind((Object input) {
+          return $switch(input, {
+            'a': () => values.add(1),
+            'b': () => values.add(2),
+            'c': () => values.add(3),
+            'd': () => values.add(4),
+          });
+        });
+        func('d');
+        func('a');
+        func('c');
+        func('b');
+        func('e');
+        func('a');
+        expect(values, [4, 1, 3, 2, 1]);
+      });
+    });
+
     group('unless', () {
       test('should call function when condition is not matched', () {
         final func = $bind((bool input) {

@@ -78,6 +78,7 @@ $Cursor<T> $cursor<T>(T init()) {
 
 T $fork<T>(Object key, T logic()) {
   final contexts = $cursor(() => Map<Object, _Context>()).value;
+  if (logic == null) return null;
 
   final prevContext = _context;
   _context = contexts[key] ??= _Context();
