@@ -282,6 +282,18 @@ void main() {
         expect(func(2), 1);
         expect(func(3), 2);
       });
+
+      test('should accept custom equals function', () {
+        final func = $bind((value) {
+          return $prev(value, (a, b) => a % 2 == b % 2);
+        });
+        expect(func(1), null);
+        expect(func(2), 1);
+        expect(func(4), 2);
+        expect(func(6), 2);
+        expect(func(7), 2);
+        expect(func(8), 7);
+      });
     });
 
     group('equals', () {

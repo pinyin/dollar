@@ -110,10 +110,12 @@ T $final<T>(T init()) {
   return $cache<T>(() => init(), true);
 }
 
-T $prev<T>(T value) {
+T $prev<T>(T value, [bool equals(T prev, T curr)]) {
   final curr = $cursor<T>(() => null);
   final prev = curr.value;
-  curr.value = value;
+  final shouldUpdate =
+      prev == null || !(equals?.call(prev, value) ?? value == prev);
+  if (shouldUpdate) curr.value = value;
   return prev;
 }
 
