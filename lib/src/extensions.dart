@@ -110,13 +110,19 @@ T $final<T>(T init()) {
   return $cache<T>(() => init(), true);
 }
 
-T $prev<T>(T value, [bool equals(T prev, T curr)]) {
+T $prev<T>(T value) {
   final curr = $cursor<T>(() => null);
   final prev = curr.value;
-  final shouldUpdate =
-      prev == null || !(equals?.call(prev, value) ?? value == prev);
-  if (shouldUpdate) curr.value = value;
+  curr.value = value;
   return prev;
+}
+
+T $distinct<T>(T value, [T equals(T prev, T curr)]) {
+  final curr = $cursor<T>(() => null);
+  final shouldUpdate = curr.value == null ||
+      !(equals?.call(curr.value, value) ?? curr.value == value);
+  if (shouldUpdate) curr.value = value;
+  return curr.value;
 }
 
 bool $equals<T>(T value) {

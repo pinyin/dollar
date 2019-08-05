@@ -279,20 +279,24 @@ void main() {
           return $prev(value);
         });
         expect(func(1), null);
+        expect(func(1), 1);
         expect(func(2), 1);
         expect(func(3), 2);
       });
+    });
 
-      test('should accept custom equals function', () {
+    group('distinct', () {
+      test('should return last non-equal value', () {
         final func = $bind((value) {
-          return $prev(value, (a, b) => a % 2 == b % 2);
+          return $distinct(value, (a, b) => a % 2 == b % 2);
         });
-        expect(func(1), null);
-        expect(func(2), 1);
+        expect(func(1), 1);
+        expect(func(1), 1);
+        expect(func(2), 2);
         expect(func(4), 2);
         expect(func(6), 2);
-        expect(func(7), 2);
-        expect(func(8), 7);
+        expect(func(7), 7);
+        expect(func(8), 8);
       });
     });
 
