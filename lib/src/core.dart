@@ -1,7 +1,6 @@
 import 'dart:collection';
 
-R Function(A, B, C, D, E, F, G) $bind7<R, A, B, C, D, E, F, G>(
-    R func(A a, B b, C c, D d, E e, F f, G g),
+dynamic $bind<T extends Function>(T func,
     [$EffectHandlerCreator createHandler]) {
   // TODO support function with arbitrary signature
   // TODO nullability of createHandler must be consistent across calls
@@ -12,20 +11,33 @@ R Function(A, B, C, D, E, F, G) $bind7<R, A, B, C, D, E, F, G>(
   final context =
       _handler != null ? $cursor(() => _Context()).value : _Context();
 
-  return (A a, B b, C c, D d, E e, F f, G g) {
+  return $Context()
+    ..handler = handler
+    ..context = context
+    ..func = func;
+}
+
+class $Context {
+  Function func;
+  _Context context;
+  $EffectHandler handler;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) {
     context.cursorReset();
 
     final prevHandler = _handler;
     final prevContext = _context;
     final prevDeferred = _deferred;
-    R result;
+    dynamic result;
 
     try {
       _handler = handler;
       _context = context;
       _deferred = null;
 
-      result = func(a, b, c, d, e, f, g);
+      result = Function.apply(
+          func, invocation.positionalArguments, invocation.namedArguments);
 
       assert(identical(_context, context));
       assert(identical(_handler, handler));
@@ -41,7 +53,7 @@ R Function(A, B, C, D, E, F, G) $bind7<R, A, B, C, D, E, F, G>(
     }
 
     return result;
-  };
+  }
 }
 
 T $isolate<T>(T func()) {

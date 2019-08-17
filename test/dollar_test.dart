@@ -44,7 +44,7 @@ void main() {
         expect(func, throwsA(TypeMatcher<NoSuchMethodError>()));
       });
       test('should keep return value of inner function', () {
-        final func = $bind((value) {
+        final func = $bind1((value) {
           return $isolate(() {
             return value;
           });
@@ -71,7 +71,7 @@ void main() {
 
     group('fork', () {
       test('should provide multiple contexts based on key', () {
-        final func = $bind((key) {
+        final func = $bind1((key) {
           return $fork(key, () {
             return $cursor(() => 0);
           });
@@ -88,7 +88,7 @@ void main() {
       test('should run callback after function exits', () {
         int runCount = 0;
         int deferCount = 0;
-        final func = $bind((bool shouldThrow) {
+        final func = $bind1((bool shouldThrow) {
           $defer(() {
             deferCount++;
           });
@@ -110,7 +110,7 @@ void main() {
     group('raise', () {
       test('should delegate call to handler', () {
         final effects = [];
-        final func = $bind((int value) {
+        final func = $bind1((int value) {
           return $raise(value);
         }, (_) {
           return (effect) {
@@ -129,7 +129,7 @@ void main() {
   group('extensions', () {
     group('if', () {
       test('should call function by condition', () {
-        final func = $bind((bool input) {
+        final func = $bind1((bool input) {
           return $if(input, () {
             return 1;
           }, orElse: () => 2);
@@ -140,7 +140,7 @@ void main() {
       test('should create separated cursor context', () {
         $Cursor<int> a;
         $Cursor<int> b;
-        final func = $bind((bool input) {
+        final func = $bind1((bool input) {
           a = $cursor(() => 1);
           b = $if(input, () {
             return $cursor(() => 2);
@@ -166,7 +166,7 @@ void main() {
     group('switch', () {
       test('should call function by value', () {
         final values = [];
-        final func = $bind((Object input) {
+        final func = $bind1((Object input) {
           return $switch(input, {
             'a': () => values.add(1),
             'b': () => values.add(2),
@@ -186,7 +186,7 @@ void main() {
 
     group('unless', () {
       test('should call function when condition is not matched', () {
-        final func = $bind((bool input) {
+        final func = $bind1((bool input) {
           return $unless(input, () {
             return 1;
           });
@@ -199,7 +199,7 @@ void main() {
     group('ref', () {
       test('should keep reference to value', () {
         final refs = <$Ref>[];
-        final func = $bind((value) {
+        final func = $bind1((value) {
           refs.add($ref(() => value));
         });
         func(1);
@@ -239,7 +239,7 @@ void main() {
     group('cache', () {
       test('should return cached value iff second parameter is true', () {
         var value = 0;
-        final func = $bind((keep) {
+        final func = $bind1((keep) {
           return $cache(() => ++value, keep);
         });
         expect(func(true), 1);
@@ -275,7 +275,7 @@ void main() {
 
     group('prev', () {
       test('should provide previous value', () {
-        final func = $bind((value) {
+        final func = $bind1((value) {
           return $prev(value);
         });
         expect(func(1), null);
@@ -287,7 +287,7 @@ void main() {
 
     group('distinct', () {
       test('should return last non-equal value', () {
-        final func = $bind((value) {
+        final func = $bind1((value) {
           return $distinct(value, (a, b) => a % 2 == b % 2);
         });
         expect(func(1), 1);
@@ -302,7 +302,7 @@ void main() {
 
     group('equals', () {
       test('should return the identicality of value & previous value', () {
-        final func = $bind((value) {
+        final func = $bind1((value) {
           return $equals(value);
         });
         expect(func(1), false);
@@ -314,7 +314,7 @@ void main() {
 
     group('identical', () {
       test('should return the identicality of value & previous value', () {
-        final func = $bind((value) {
+        final func = $bind1((value) {
           return $identical(value);
         });
         expect(func(1), false);
@@ -327,7 +327,7 @@ void main() {
     group('shallowEquals', () {
       test('should return the shallow identicality of value & previous value',
           () {
-        final func = $bind((value) {
+        final func = $bind1((value) {
           return $shallowEquals(value);
         });
         expect(func([1, 2]), false);
@@ -339,7 +339,7 @@ void main() {
 
     group('while', () {
       test('should run effect as long as condition returns true', () {
-        final func = $bind((int loop) {
+        final func = $bind1((int loop) {
           return $while(() => loop > 0, () {
             loop--;
             return ++$cursor(() => 0).value;
@@ -354,7 +354,7 @@ void main() {
     group('interpolate', () {
       test('should provide value and previous value to interpolate function',
           () {
-        final func = $bind((value) {
+        final func = $bind1((value) {
           return $interpolate(value, (prev, curr) => (prev ?? 0) + curr);
         });
         expect(func(1), 1);
@@ -367,7 +367,7 @@ void main() {
     group('aggregate', () {
       test('should provide value and aggregated value to aggregate function',
           () {
-        final func = $bind((value) {
+        final func = $bind1((value) {
           return $aggregate(value, (prev, curr) => (prev ?? 0) + curr);
         });
         expect(func(1), 1);
@@ -464,7 +464,7 @@ void main() {
         final listeners = $Listeners();
         var closeCount = 0;
         var result = 0;
-        final func = $bind((deps) {
+        final func = $bind1((deps) {
           $effect(() {
             result++;
             return () => closeCount++;

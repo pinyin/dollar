@@ -3,7 +3,7 @@ import 'package:dollar/dollar.dart';
 R Function(A, B, C, D, E, F) $bind6<R, A, B, C, D, E, F>(
     R func(A a, B b, C c, D d, E e, F f),
     [$EffectHandlerCreator createHandler]) {
-  final inner = $bind7(
+  final inner = $bind(
       (A a, B b, C c, D d, E e, F f, void g) => func(a, b, c, d, e, f),
       createHandler);
   return (a, b, c, d, e, f) => inner(a, b, c, d, e, f, null);
@@ -12,7 +12,7 @@ R Function(A, B, C, D, E, F) $bind6<R, A, B, C, D, E, F>(
 R Function(A, B, C, D, E) $bind5<R, A, B, C, D, E>(
     R func(A a, B b, C c, D d, E e),
     [$EffectHandlerCreator createHandler]) {
-  final inner = $bind7(
+  final inner = $bind(
       (A a, B b, C c, D d, E e, void f, void g) => func(a, b, c, d, e),
       createHandler);
   return (a, b, c, d, e) => inner(a, b, c, d, e, null, null);
@@ -20,7 +20,7 @@ R Function(A, B, C, D, E) $bind5<R, A, B, C, D, E>(
 
 R Function(A, B, C, D) $bind4<R, A, B, C, D>(R func(A a, B b, C c, D d),
     [$EffectHandlerCreator createHandler]) {
-  final inner = $bind7(
+  final inner = $bind(
       (A a, B b, C c, D d, void e, void f, void g) => func(a, b, c, d),
       createHandler);
   return (a, b, c, d) => inner(a, b, c, d, null, null, null);
@@ -28,7 +28,7 @@ R Function(A, B, C, D) $bind4<R, A, B, C, D>(R func(A a, B b, C c, D d),
 
 R Function(A, B, C) $bind3<R, A, B, C>(R func(A a, B b, C c),
     [$EffectHandlerCreator createHandler]) {
-  final inner = $bind7(
+  final inner = $bind(
       (A a, B b, C c, void d, void e, void f, void g) => func(a, b, c),
       createHandler);
   return (a, b, c) => inner(a, b, c, null, null, null, null);
@@ -36,21 +36,21 @@ R Function(A, B, C) $bind3<R, A, B, C>(R func(A a, B b, C c),
 
 R Function(A, B) $bind2<R, A, B>(R func(A a, B b),
     [$EffectHandlerCreator createHandler]) {
-  final inner = $bind7(
+  final inner = $bind(
       (A a, B b, void c, void d, void e, void f, void g) => func(a, b),
       createHandler);
   return (a, b) => inner(a, b, null, null, null, null, null);
 }
 
-R Function(A) $bind<R, A>(R func(A a), [$EffectHandlerCreator createHandler]) {
-  final inner = $bind7(
+R Function(A) $bind1<R, A>(R func(A a), [$EffectHandlerCreator createHandler]) {
+  final inner = $bind(
       (A a, void b, void c, void d, void e, void f, void g) => func(a),
       createHandler);
   return (a) => inner(a, null, null, null, null, null, null);
 }
 
 R Function() $bind0<R>(R func(), [$EffectHandlerCreator createHandler]) {
-  final inner = $bind7(
+  final inner = $bind(
       (void a, void b, void c, void d, void e, void f, void g) => func(),
       createHandler);
   return () => inner(null, null, null, null, null, null, null);
@@ -117,7 +117,7 @@ T $prev<T>(T value) {
   return prev;
 }
 
-T $distinct<T>(T value, [T equals(T prev, T curr)]) {
+T $distinct<T>(T value, [bool equals(T a, T b)]) {
   final curr = $cursor<T>(() => null);
   final shouldUpdate = curr.value == null ||
       !(equals?.call(curr.value, value) ?? curr.value == value);
@@ -181,7 +181,7 @@ void $effect(Function() effect(), Iterable deps) {
 
 void $listen<T>(void callback(T event)) {
   final cursor = $cursor(() => null);
-  final listener = $bind(callback);
+  final listener = $bind1(callback);
   $raise($Listened(listener, cursor));
 }
 
