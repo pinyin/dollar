@@ -82,13 +82,8 @@ T $isolate<T>(T func()) {
 }
 
 $Cursor<T> $cursor<T>(T init()) {
-  final $Cursor<T> result = _context.cursor ??= () {
-    final cursor = _$CursorImpl<T>();
-    cursor.value = $isolate(() {
-      return init();
-    });
-    return cursor;
-  }();
+  final $Cursor<T> result =
+      _context.cursor ??= _$CursorImpl<T>()..value = $isolate(init);
   _context.cursorNext();
   return result;
 }
