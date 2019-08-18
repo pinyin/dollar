@@ -5,17 +5,20 @@ dynamic $bind<T extends Function>(T func,
   // TODO support function with arbitrary signature
   // TODO nullability of createHandler must be consistent across calls
 
-  createHandler ??= (parent) => (effect) => {parent(effect)};
+  createHandler ??= _createDefaultHandler;
   final handler = createHandler(_handler ?? (effect) {});
   assert(handler != null);
-  final context =
-      _handler != null ? $cursor(() => _Context()).value : _Context();
+  final context = _handler != null
+      ? ($cursor(() => $Context()..context = _Context()).value)
+      : ($Context()..context = _Context());
 
-  return $Context()
+  return context
     ..handler = handler
-    ..context = context
     ..func = func;
 }
+
+final $EffectHandlerCreator _createDefaultHandler =
+    (parent) => (effect) => {parent(effect)};
 
 class $Context {
   Function func;
@@ -38,6 +41,8 @@ class $Context {
 
       result = Function.apply(
           func, invocation.positionalArguments, invocation.namedArguments);
+      // TODO support generator
+      // we may never be able to support async functions though.
 
       assert(identical(_context, context));
       assert(identical(_handler, handler));
