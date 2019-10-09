@@ -17,6 +17,12 @@ dynamic $bind<T extends Function>(T func,
     ..func = func;
 }
 
+final _bind = $bind;
+
+extension $Bind on Function {
+  $bind([$EffectHandlerCreator createHandler]) => _bind(this, createHandler);
+}
+
 final $EffectHandlerCreator _createDefaultHandler =
     (parent) => (effect) => {parent(effect)};
 

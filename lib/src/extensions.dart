@@ -1,29 +1,16 @@
 import 'package:dollar/dollar.dart';
 
-R Function(A, B, C, D, E, F) $bind6<R, A, B, C, D, E, F>(
-    R func(A a, B b, C c, D d, E e, F f),
-    [$EffectHandlerCreator createHandler]) {
-  final inner = $bind(
-      (A a, B b, C c, D d, E e, F f, void g) => func(a, b, c, d, e, f),
-      createHandler);
-  return (a, b, c, d, e, f) => inner(a, b, c, d, e, f, null);
-}
-
-R Function(A, B, C, D, E) $bind5<R, A, B, C, D, E>(
-    R func(A a, B b, C c, D d, E e),
-    [$EffectHandlerCreator createHandler]) {
-  final inner = $bind(
-      (A a, B b, C c, D d, E e, void f, void g) => func(a, b, c, d, e),
-      createHandler);
-  return (a, b, c, d, e) => inner(a, b, c, d, e, null, null);
-}
-
 R Function(A, B, C, D) $bind4<R, A, B, C, D>(R func(A a, B b, C c, D d),
     [$EffectHandlerCreator createHandler]) {
   final inner = $bind(
       (A a, B b, C c, D d, void e, void f, void g) => func(a, b, c, d),
       createHandler);
   return (a, b, c, d) => inner(a, b, c, d, null, null, null);
+}
+
+extension $Bind4<R, A, B, C, D> on R Function(A, B, C, D) {
+  R Function(A, B, C, D) $bind([$EffectHandlerCreator createHandler]) =>
+      $bind4(this, createHandler);
 }
 
 R Function(A, B, C) $bind3<R, A, B, C>(R func(A a, B b, C c),
@@ -34,12 +21,22 @@ R Function(A, B, C) $bind3<R, A, B, C>(R func(A a, B b, C c),
   return (a, b, c) => inner(a, b, c, null, null, null, null);
 }
 
+extension $Bind3<R, A, B, C> on R Function(A, B, C) {
+  R Function(A, B, C) $bind([$EffectHandlerCreator createHandler]) =>
+      $bind3(this, createHandler);
+}
+
 R Function(A, B) $bind2<R, A, B>(R func(A a, B b),
     [$EffectHandlerCreator createHandler]) {
   final inner = $bind(
       (A a, B b, void c, void d, void e, void f, void g) => func(a, b),
       createHandler);
   return (a, b) => inner(a, b, null, null, null, null, null);
+}
+
+extension $Bind2<R, A, B> on R Function(A, B) {
+  R Function(A, B) $bind([$EffectHandlerCreator createHandler]) =>
+      $bind2(this, createHandler);
 }
 
 R Function(A) $bind1<R, A>(R func(A a), [$EffectHandlerCreator createHandler]) {
@@ -49,11 +46,21 @@ R Function(A) $bind1<R, A>(R func(A a), [$EffectHandlerCreator createHandler]) {
   return (a) => inner(a, null, null, null, null, null, null);
 }
 
+extension $Bind1<R, A> on R Function(A) {
+  R Function(A) $bind([$EffectHandlerCreator createHandler]) =>
+      $bind1(this, createHandler);
+}
+
 R Function() $bind0<R>(R func(), [$EffectHandlerCreator createHandler]) {
   final inner = $bind(
       (void a, void b, void c, void d, void e, void f, void g) => func(),
       createHandler);
   return () => inner(null, null, null, null, null, null, null);
+}
+
+extension $Bind0<R> on R Function() {
+  R Function() $bind([$EffectHandlerCreator createHandler]) =>
+      $bind0(this, createHandler);
 }
 
 R $switch<T, R>(T value, Map<T, R Function()> handlers) {
@@ -76,6 +83,12 @@ $Ref<T> $ref<T>(T value) {
   final cursor = $cursor<_$RefImpl<T>>(() => _$RefImpl(value));
   cursor.value.value = value;
   return cursor.value;
+}
+
+final _ref = $ref;
+
+extension $RefExtension<T> on T {
+  $Ref<T> get $ref => _ref(this);
 }
 
 $Var<T> $var<T>(T init()) {
@@ -117,6 +130,12 @@ T $prev<T>(T value) {
   return prev;
 }
 
+final _prev = $prev;
+
+extension $Prev<T> on T {
+  T get $prev => _prev(this);
+}
+
 T $distinct<T>(T value, [bool equals(T a, T b)]) {
   final curr = $cursor<T>(() => null);
   final shouldUpdate = curr.value == null ||
@@ -129,12 +148,24 @@ bool $equals<T>(T value) {
   return value == $prev(value);
 }
 
+extension $Equals on Object {
+  bool get $isEqual => $equals(this);
+}
+
 bool $identical<T>(T value) {
   return identical(value, $prev(value));
 }
 
+extension $Identical on Object {
+  bool get $isIdentical => $identical(this);
+}
+
 bool $shallowEquals(Iterable value) {
   return _iterableEquals(value, $prev(value));
+}
+
+extension $ShallowEquals on Iterable {
+  bool get $isShallowEqual => $shallowEquals(this);
 }
 
 T $while<T>(bool condition(), T compute()) {

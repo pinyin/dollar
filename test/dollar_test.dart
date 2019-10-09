@@ -6,24 +6,24 @@ void main() {
     group('bind', () {
       test('should forward effects to handler', () {
         final effects = [];
-        final func = $bind0(() {
+        final func = () {
           $raise(1);
           $raise(2);
-        }, (_) => effects.add);
+        }.$bind((_) => effects.add);
         expect(effects, []);
         func();
         expect(effects, [1, 2]);
       });
       test('should create new cursor context', () {
         final effects = [];
-        final func = $bind0(() {
+        final func = () {
           $raise(1);
           $raise(2);
-          $bind0(() {
+          () {
             $raise(3);
             $raise(4);
-          })();
-        }, (_) => effects.add);
+          }.$bind()();
+        }.$bind((_) => effects.add);
         expect(effects, []);
         func();
         expect(effects, [1, 2, 3, 4]);
@@ -35,20 +35,20 @@ void main() {
 
     group('isolate', () {
       test('should hide context form callback', () {
-        final func = $bind0(() {
+        final func = () {
           $raise(1);
           $isolate(() {
             $raise(2);
           });
-        });
+        }.$bind();
         expect(func, throwsA(TypeMatcher<NoSuchMethodError>()));
       });
       test('should keep return value of inner function', () {
-        final func = $bind1((value) {
+        final func = (value) {
           return $isolate(() {
             return value;
           });
-        });
+        }.$bind();
         expect(func(1), 1);
         expect(func(3), 3);
       });
@@ -200,7 +200,7 @@ void main() {
       test('should keep reference to value', () {
         final refs = <$Ref>[];
         final func = $bind1((value) {
-          refs.add($ref(() => value));
+          refs.add((() => value).$ref);
         });
         func(1);
         func(2);
@@ -275,8 +275,8 @@ void main() {
 
     group('prev', () {
       test('should provide previous value', () {
-        final func = $bind1((value) {
-          return $prev(value);
+        final func = $bind1((Object value) {
+          return value.$prev;
         });
         expect(func(1), null);
         expect(func(1), 1);
@@ -302,8 +302,8 @@ void main() {
 
     group('equals', () {
       test('should return the identicality of value & previous value', () {
-        final func = $bind1((value) {
-          return $equals(value);
+        final func = $bind1((Object value) {
+          return value.$isEqual;
         });
         expect(func(1), false);
         expect(func(2), false);
@@ -314,8 +314,8 @@ void main() {
 
     group('identical', () {
       test('should return the identicality of value & previous value', () {
-        final func = $bind1((value) {
-          return $identical(value);
+        final func = $bind1((Object value) {
+          return value.$isIdentical;
         });
         expect(func(1), false);
         expect(func(2), false);
@@ -327,8 +327,8 @@ void main() {
     group('shallowEquals', () {
       test('should return the shallow identicality of value & previous value',
           () {
-        final func = $bind1((value) {
-          return $shallowEquals(value);
+        final func = $bind1((Iterable value) {
+          return value.$isShallowEqual;
         });
         expect(func([1, 2]), false);
         expect(func([1, 2]), true);
