@@ -227,6 +227,7 @@ void $commit() {
 
 abstract class $Ref<T> {
   T get value;
+  T get() => value;
 }
 
 class _$RefImpl<T> extends $Ref<T> {
@@ -235,11 +236,8 @@ class _$RefImpl<T> extends $Ref<T> {
   _$RefImpl(this.value);
 }
 
-abstract class $Var<T> {
-  T get value;
+abstract class $Var<T> extends $Ref<T> {
   set value(T newValue);
-
-  T get() => value;
   T set(T newValue) => value = newValue;
 }
 
