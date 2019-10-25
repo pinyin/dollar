@@ -2,10 +2,10 @@ import 'package:dollar/dollar.dart';
 
 R Function(A, B, C, D) $bind4<R, A, B, C, D>(R func(A a, B b, C c, D d),
     [$EffectHandlerCreator createHandler]) {
-  final inner = $bind(
+  final dynamic inner = $bind(
       (A a, B b, C c, D d, void e, void f, void g) => func(a, b, c, d),
       createHandler);
-  return (a, b, c, d) => inner(a, b, c, d, null, null, null);
+  return (a, b, c, d) => inner(a, b, c, d, null, null, null) as R;
 }
 
 extension $Bind4<R, A, B, C, D> on R Function(A, B, C, D) {
@@ -15,10 +15,10 @@ extension $Bind4<R, A, B, C, D> on R Function(A, B, C, D) {
 
 R Function(A, B, C) $bind3<R, A, B, C>(R func(A a, B b, C c),
     [$EffectHandlerCreator createHandler]) {
-  final inner = $bind(
+  final dynamic inner = $bind(
       (A a, B b, C c, void d, void e, void f, void g) => func(a, b, c),
       createHandler);
-  return (a, b, c) => inner(a, b, c, null, null, null, null);
+  return (a, b, c) => inner(a, b, c, null, null, null, null) as R;
 }
 
 extension $Bind3<R, A, B, C> on R Function(A, B, C) {
@@ -28,10 +28,10 @@ extension $Bind3<R, A, B, C> on R Function(A, B, C) {
 
 R Function(A, B) $bind2<R, A, B>(R func(A a, B b),
     [$EffectHandlerCreator createHandler]) {
-  final inner = $bind(
+  final dynamic inner = $bind(
       (A a, B b, void c, void d, void e, void f, void g) => func(a, b),
       createHandler);
-  return (a, b) => inner(a, b, null, null, null, null, null);
+  return (a, b) => inner(a, b, null, null, null, null, null) as R;
 }
 
 extension $Bind2<R, A, B> on R Function(A, B) {
@@ -40,10 +40,10 @@ extension $Bind2<R, A, B> on R Function(A, B) {
 }
 
 R Function(A) $bind1<R, A>(R func(A a), [$EffectHandlerCreator createHandler]) {
-  final inner = $bind(
+  final dynamic inner = $bind(
       (A a, void b, void c, void d, void e, void f, void g) => func(a),
       createHandler);
-  return (a) => inner(a, null, null, null, null, null, null);
+  return (a) => inner(a, null, null, null, null, null, null) as R;
 }
 
 extension $Bind1<R, A> on R Function(A) {
@@ -52,10 +52,10 @@ extension $Bind1<R, A> on R Function(A) {
 }
 
 R Function() $bind0<R>(R func(), [$EffectHandlerCreator createHandler]) {
-  final inner = $bind(
+  final dynamic inner = $bind(
       (void a, void b, void c, void d, void e, void f, void g) => func(),
       createHandler);
-  return () => inner(null, null, null, null, null, null, null);
+  return () => inner(null, null, null, null, null, null, null) as R;
 }
 
 extension $Bind0<R> on R Function() {
@@ -88,16 +88,17 @@ $Ref<T> $ref<T>(T value) {
 final _ref = $ref;
 
 extension $RefExtension<T> on T {
-  $Ref<T> get $ref => _ref(this);
+  $Ref<T> get $ref => _ref<T>(this as T);
 }
 
 $Var<T> $var<T>(T init()) {
   final didInit = $cursor(() => false);
   final cursor = $cursor<$Var<T>>(() => null);
   $if(!didInit.value, () {
-    cursor.value = _$VarImpl(
+    cursor.value = _$VarImpl<T>(
       init(),
-      $bind2((T from, T to) => $raise($VarUpdated(from, to, cursor))),
+      $bind2<void, T, T>(
+          (T from, T to) => $raise($VarUpdated(from, to, cursor))),
     );
     didInit.value = true;
   });
@@ -133,7 +134,7 @@ T $prev<T>(T value) {
 final _prev = $prev;
 
 extension $Prev<T> on T {
-  T get $prev => _prev(this);
+  T get $prev => _prev<T>(this as T);
 }
 
 T $distinct<T>(T value, [bool equals(T a, T b)]) {
@@ -161,7 +162,7 @@ extension $Identical on Object {
 }
 
 bool $shallowEquals(Iterable value) {
-  return _iterableEquals(value, $prev(value));
+  return _iterableEquals<dynamic>(value, $prev(value));
 }
 
 extension $ShallowEquals on Iterable {
@@ -177,11 +178,26 @@ T $while<T>(bool condition(), T compute()) {
   return result;
 }
 
+void $forEach<E>(Iterable<E> iterable, void f(E element)) {
+  f = $bind1(f);
+  var i = 0;
+  for (E element in iterable) {
+    f(element);
+    i++;
+  }
+}
+
+const _forEach = $forEach;
+
+extension $ForEach<T> on Iterable<T> {
+  void $forEach(void f(T element)) => _forEach<T>(this, f);
+}
+
 R $interpolate<T, R>(T value, R diff(T prev, T curr)) {
   return diff($prev(value), value);
 }
 
-R $aggregate<T, R>(T value, R aggregator(R aggreagte, T value)) {
+R $aggregate<T, R>(T value, R aggregator(R aggregate, T value)) {
   final cursor = $cursor<R>(() => null);
   cursor.value = aggregator(cursor.value, value);
   return cursor.value;
@@ -200,7 +216,7 @@ T $memo<T>(T compute(), Iterable deps) {
 void $async(Function() work()) {
   final cleanup = $cursor<Function()>(() => null);
 
-  final maybeCleanup = () => $if(cleanup.value != null, cleanup.value);
+  final maybeCleanup = () => $if<void>(cleanup.value != null, cleanup.value);
   maybeCleanup();
   cleanup.value = work();
   $listen(($ContextTerminated _) => maybeCleanup());
@@ -231,6 +247,7 @@ abstract class $Ref<T> {
 }
 
 class _$RefImpl<T> extends $Ref<T> {
+  @override
   T value;
 
   _$RefImpl(this.value);
@@ -264,7 +281,7 @@ class $VarUpdated<T> {
   final T to;
 
   @override
-  bool operator ==(other) {
+  bool operator ==(dynamic other) {
     return other is $VarUpdated<T> &&
         other.runtimeType == runtimeType &&
         other.at == at;
@@ -282,7 +299,7 @@ class $Listened<T> {
   final Type type;
 
   @override
-  bool operator ==(other) {
+  bool operator ==(dynamic other) {
     return other is $Listened<T> &&
         other.runtimeType == runtimeType &&
         other.callback == callback;
@@ -332,14 +349,14 @@ $EffectHandlerCreator $onVarUpdated(dynamic onUpdate($VarUpdated effect)) {
 }
 
 class $Listeners {
-  add(Type eventType, Function callback, $Cursor at) {
+  void add(Type eventType, Function callback, $Cursor at) {
     assert(_types[at] == null || _types[at] == eventType);
     _types[at] = eventType;
     (_cursors[eventType] ??= {}).add(at);
     _callbacks[at] = callback;
   }
 
-  trigger<T>(T event) {
+  void trigger<T>(T event) {
     for (final cursor in (_cursors[event.runtimeType] ??= {})) {
       final callback = _callbacks[cursor];
       if (callback is Function) {

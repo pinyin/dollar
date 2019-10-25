@@ -5,17 +5,17 @@ void main() {
   group('core', () {
     group('bind', () {
       test('should forward effects to handler', () {
-        final effects = [];
+        final effects = <dynamic>[];
         final func = () {
           $raise(1);
           $raise(2);
         }.$bind((_) => effects.add);
-        expect(effects, []);
+        expect(effects, <dynamic>[]);
         func();
         expect(effects, [1, 2]);
       });
       test('should create new cursor context', () {
-        final effects = [];
+        final effects = <dynamic>[];
         final func = () {
           $raise(1);
           $raise(2);
@@ -24,7 +24,7 @@ void main() {
             $raise(4);
           }.$bind()();
         }.$bind((_) => effects.add);
-        expect(effects, []);
+        expect(effects, <dynamic>[]);
         func();
         expect(effects, [1, 2, 3, 4]);
         effects.clear();
@@ -44,7 +44,7 @@ void main() {
         expect(func, throwsA(TypeMatcher<NoSuchMethodError>()));
       });
       test('should keep return value of inner function', () {
-        final func = (value) {
+        final func = (int value) {
           return $isolate(() {
             return value;
           });
@@ -71,7 +71,7 @@ void main() {
 
     group('fork', () {
       test('should provide multiple contexts based on key', () {
-        final func = $bind1((key) {
+        final func = $bind1((int key) {
           return $fork(key, () {
             return $cursor(() => 0);
           });
@@ -109,9 +109,9 @@ void main() {
 
     group('raise', () {
       test('should delegate call to handler', () {
-        final effects = [];
-        final func = $bind1((int value) {
-          return $raise(value);
+        final effects = <dynamic>[];
+        final func = $bind1<int, int>((int value) {
+          return $raise(value) as int;
         }, (_) {
           return (effect) {
             effects.add(effect);
@@ -165,7 +165,7 @@ void main() {
 
     group('switch', () {
       test('should call function by value', () {
-        final values = [];
+        final values = <dynamic>[];
         final func = $bind1((Object input) {
           return $switch(input, {
             'a': () => values.add(1),
@@ -199,7 +199,7 @@ void main() {
     group('ref', () {
       test('should keep reference to value', () {
         final refs = <$Ref>[];
-        final func = $bind1((value) {
+        final func = $bind1((int value) {
           refs.add((() => value).$ref);
         });
         func(1);
@@ -214,7 +214,7 @@ void main() {
         final effects = <$VarUpdated>[];
         final func = $bind0(() {
           return $var(() => 1);
-        }, (_) => effects.add);
+        }, (_) => effects.add as Function(Object));
         var v = func();
         v.value = 2;
         expect(effects.length, 1);
@@ -239,7 +239,7 @@ void main() {
     group('cache', () {
       test('should return cached value iff second parameter is true', () {
         var value = 0;
-        final func = $bind1((keep) {
+        final func = $bind1((bool keep) {
           return $cache(() => ++value, keep);
         });
         expect(func(true), 1);
@@ -254,7 +254,7 @@ void main() {
         final func = $bind0(() {
           return $cache(() {
             count++;
-            variable = $var(() => 1);
+            variable = $var<int>(() => 1);
             return variable;
           }, true);
         });
@@ -287,8 +287,8 @@ void main() {
 
     group('distinct', () {
       test('should return last non-equal value', () {
-        final func = $bind1((value) {
-          return $distinct(value, (a, b) => a % 2 == b % 2);
+        final func = $bind1((int value) {
+          return $distinct(value, (int a, int b) => a % 2 == b % 2);
         });
         expect(func(1), 1);
         expect(func(1), 1);
@@ -330,10 +330,10 @@ void main() {
         final func = $bind1((Iterable value) {
           return value.$isShallowEqual;
         });
-        expect(func([1, 2]), false);
-        expect(func([1, 2]), true);
-        expect(func([1]), false);
-        expect(func([3]), false);
+        expect(func(<int>[1, 2]), false);
+        expect(func(<int>[1, 2]), true);
+        expect(func(<int>[1]), false);
+        expect(func(<int>[3]), false);
       });
     });
 
@@ -351,11 +351,26 @@ void main() {
       });
     });
 
+    group('forEach', () {
+      test('should apply binded function on each element of iterable', () {
+        final list = <int>[1, 2, 3, 4];
+        final result = <int>[];
+        final sideEffects = <int>[];
+        list.$forEach((v) {
+          sideEffects.add(v.$prev);
+          result.add(v * 2);
+        });
+        expect(sideEffects, [null, 1, 2, 3]);
+        expect(result, [2, 4, 6, 8]);
+      });
+    });
+
     group('interpolate', () {
       test('should provide value and previous value to interpolate function',
           () {
-        final func = $bind1((value) {
-          return $interpolate(value, (prev, curr) => (prev ?? 0) + curr);
+        final func = $bind1((int value) {
+          return $interpolate(
+              value, (int prev, int curr) => (prev ?? 0) + curr);
         });
         expect(func(1), 1);
         expect(func(2), 3);
@@ -367,8 +382,8 @@ void main() {
     group('aggregate', () {
       test('should provide value and aggregated value to aggregate function',
           () {
-        final func = $bind1((value) {
-          return $aggregate(value, (prev, curr) => (prev ?? 0) + curr);
+        final func = $bind1((int value) {
+          return $aggregate(value, (int prev, int curr) => (prev ?? 0) + curr);
         });
         expect(func(1), 1);
         expect(func(2), 3);
@@ -380,7 +395,7 @@ void main() {
     group('generate', () {
       test('should compute value based on previous value', () {
         final func = $bind0(() {
-          return $generate((prev) => (prev ?? 0) + 1);
+          return $generate((int prev) => (prev ?? 0) + 1);
         });
         expect(func(), 1);
         expect(func(), 2);
@@ -407,7 +422,7 @@ void main() {
 
     group('listen', () {
       test('should emit listener event', () {
-        final effects = [];
+        final effects = <dynamic>[];
         final listener = (int i) {
           return;
         };
@@ -464,19 +479,19 @@ void main() {
         final listeners = $Listeners();
         var closeCount = 0;
         var result = 0;
-        final func = $bind1((deps) {
+        final func = $bind1((Iterable deps) {
           $effect(() {
             result++;
             return () => closeCount++;
           }, deps);
         }, $onListened(listeners));
-        func([0, 1]);
+        func(<dynamic>[0, 1]);
         expect(result, 1);
         expect(closeCount, 0);
-        func([0, 1]);
+        func(<dynamic>[0, 1]);
         expect(result, 1);
         expect(closeCount, 0);
-        func([1, 1]);
+        func(<dynamic>[1, 1]);
         expect(result, 2);
         expect(closeCount, 1);
         listeners.trigger($ContextTerminated());

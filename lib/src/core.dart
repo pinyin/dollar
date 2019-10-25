@@ -20,11 +20,12 @@ dynamic $bind<T extends Function>(T func,
 final _bind = $bind;
 
 extension $Bind on Function {
-  $bind([$EffectHandlerCreator createHandler]) => _bind(this, createHandler);
+  dynamic $bind([$EffectHandlerCreator createHandler]) =>
+      _bind(this, createHandler);
 }
 
 final $EffectHandlerCreator _createDefaultHandler =
-    (parent) => (effect) => {parent(effect)};
+    (parent) => (effect) => parent(effect);
 
 class $Context {
   Function func;
@@ -88,8 +89,8 @@ T $isolate<T>(T func()) {
 }
 
 $Cursor<T> $cursor<T>(T init()) {
-  final $Cursor<T> result =
-      _context.cursor ??= _$CursorImpl<T>()..value = $isolate(init);
+  final $Cursor<T> result = (_context.cursor ??= _$CursorImpl<T>()
+    ..value = $isolate(init)) as $Cursor<T>;
   _context.cursorNext();
   return result;
 }
@@ -110,14 +111,14 @@ T $fork<T>(Object key, T logic()) {
 dynamic $raise(Object effect) {
   final prevContext = _context;
   _context = null;
-  final result = _handler(effect);
+  final dynamic result = _handler(effect);
   _context = prevContext;
   return result;
 }
 
 void $defer(void callback()) {
   _deferred ??= LinkedHashMap();
-  _deferred[$cursor(() => null)] = callback;
+  _deferred[$cursor<dynamic>(() => null)] = callback;
 }
 
 typedef $EffectHandler = dynamic Function(Object effect);
