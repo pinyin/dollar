@@ -127,8 +127,8 @@ void main() {
   });
 
   group('extensions', () {
-    group('BindObject', () {
-      final obj = _BindObject();
+    group('Method', () {
+      final obj = _BoundObject();
       test('should provide a dollar context', () {
         expect(obj.inc(0), 0);
         expect(obj.inc(2), 2);
@@ -358,16 +358,16 @@ void main() {
 
     group('interpolate', () {
       test('should provide value and previous value to interpolate function',
-              () {
-            final func = $bind1((int value) {
-              return $interpolate(
-                  value, (int prev, int curr) => (prev ?? 0) + curr);
-            });
-            expect(func(1), 1);
-            expect(func(2), 3);
-            expect(func(2), 4);
-            expect(func(1), 3);
-          });
+          () {
+        final func = $bind1((int value) {
+          return $interpolate(
+              value, (int prev, int curr) => (prev ?? 0) + curr);
+        });
+        expect(func(1), 1);
+        expect(func(2), 3);
+        expect(func(2), 4);
+        expect(func(1), 3);
+      });
     });
 
     group('aggregate', () {
@@ -561,7 +561,7 @@ void main() {
   });
 }
 
-class _BindObject with $BindObject {
+class _BoundObject with $Method {
   int inc([int set]) {
     return $method(inc, () {
       final value = $cursor(() => -1);

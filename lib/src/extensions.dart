@@ -65,7 +65,7 @@ extension $Bind0<R> on R Function() {
 
 final _$raise = $raise;
 
-mixin $BindObject {
+mixin $Method {
   T $method<T>(Function method, T Function() logic) {
     _bind ??= $Bind2((Function method, dynamic Function() callback) {
       return $switch<dynamic>(method, callback);
