@@ -8,11 +8,11 @@ dynamic $bind<T extends Function>(T func,
   createHandler ??= _createDefaultHandler;
   final handler = createHandler(_handler ?? (effect) {});
   assert(handler != null);
-  final context = _handler != null
-      ? ($cursor(() => $Context()..context = _Context()).value)
-      : ($Context()..context = _Context());
+  final boundFunction = _handler != null
+      ? ($cursor(() => $BoundFunction()..context = _Context()).value)
+      : ($BoundFunction()..context = _Context());
 
-  return context
+  return boundFunction
     ..handler = handler
     ..func = func;
 }
@@ -27,7 +27,7 @@ extension $Bind on Function {
 final $EffectHandlerCreator _createDefaultHandler =
     (parent) => (effect) => parent(effect);
 
-class $Context {
+class $BoundFunction {
   Function func;
   _Context context;
   $EffectHandler handler;

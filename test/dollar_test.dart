@@ -317,15 +317,15 @@ void main() {
 
     group('shallowEquals', () {
       test('should return the shallow identicality of value & previous value',
-              () {
-            final func = $bind1((Iterable value) {
-              return value.$isShallowEqual;
-            });
-            expect(func(<int>[1, 2]), false);
-            expect(func(<int>[1, 2]), true);
-            expect(func(<int>[1]), false);
-            expect(func(<int>[3]), false);
-          });
+          () {
+        final func = $bind1((Iterable value) {
+          return value.$isShallowEqual;
+        });
+        expect(func(<int>[1, 2]), false);
+        expect(func(<int>[1, 2]), true);
+        expect(func(<int>[1]), false);
+        expect(func(<int>[3]), false);
+      });
     });
 
     group('while', () {
@@ -374,7 +374,8 @@ void main() {
       test('should provide value and aggregated value to aggregate function',
               () {
             final func = $bind1((int value) {
-              return $aggregate(value, (int prev, int curr) => (prev ?? 0) + curr);
+              return $aggregate(
+                  value, (int prev, int curr) => (prev ?? 0) + curr);
             });
             expect(func(1), 1);
             expect(func(2), 3);
