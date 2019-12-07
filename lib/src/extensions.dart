@@ -67,9 +67,11 @@ final _$raise = $raise;
 
 mixin $Method {
   T $method<T>(Function method, T Function() logic) {
-    _bind ??= $Bind2((Function method, dynamic Function() callback) {
-      return $switch<dynamic>(method, callback);
-    }).$bind();
+    _bind ??= $isolate(() {
+      return $Bind2((Function method, dynamic Function() callback) {
+        return $switch<dynamic>(method, callback);
+      }).$bind();
+    });
     return _bind(method, logic) as T;
   }
 
