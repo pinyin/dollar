@@ -14,7 +14,7 @@ void main() {
         func();
         expect(effects, [1, 2]);
       });
-      test('should create new cursor context', () {
+      test('should create new property context', () {
         final effects = <dynamic>[];
         final func = () {
           $raise(1);
@@ -54,18 +54,18 @@ void main() {
       });
     });
 
-    group('cursor', () {
+    group('property', () {
       test('should keep value across calls', () {
-        $Cursor<int> cursor;
+        $Property<int> property;
         final func = $bind0(() {
-          cursor = $cursor(() => 1);
-          $cursor(() => 2);
+          property = $property(() => 1);
+          $property(() => 2);
         });
         func();
-        expect(cursor?.value, 1);
-        cursor.value++;
+        expect(property?.value, 1);
+        property.value++;
         func();
-        expect(cursor?.value, 2);
+        expect(property?.value, 2);
       });
     });
 
@@ -73,7 +73,7 @@ void main() {
       test('should provide multiple contexts based on key', () {
         final func = $bind1((int key) {
           return $switch(key, () {
-            return $cursor(() => 0);
+            return $property(() => 0);
           });
         });
         func(0).value++;
@@ -129,7 +129,7 @@ void main() {
   group('extensions', () {
     group('Method', () {
       final obj = _BoundObject();
-      test('should provide a dollar context', () {
+      test('should provide a dollar context for each method', () {
         expect(obj.inc(0), 0);
         expect(obj.inc(2), 2);
         expect(obj.inc(), 3);
@@ -149,14 +149,14 @@ void main() {
         expect(func(true), 1);
         expect(func(false), 2);
       });
-      test('should create separated cursor context', () {
-        $Cursor<int> a;
-        $Cursor<int> b;
+      test('should create separated property context', () {
+        $Property<int> a;
+        $Property<int> b;
         final func = $bind1((bool input) {
-          a = $cursor(() => 1);
+          a = $property(() => 1);
           b = $if(input, () {
-            return $cursor(() => 2);
-          }, orElse: () => $cursor(() => 3));
+            return $property(() => 2);
+          }, orElse: () => $property(() => 3));
           a.value++;
           b.value--;
         });
@@ -333,7 +333,7 @@ void main() {
         final func = $bind1((int loop) {
           return $while(() => loop > 0, () {
             loop--;
-            return ++$cursor(() => 0).value;
+            return ++$property(() => 0).value;
           });
         });
         expect(func(2), 2);
@@ -399,7 +399,7 @@ void main() {
       test('should recompute when dependencies changed', () {
         var deps = [1, 2];
         final func = $bind0(() {
-          var init = $cursor(() => 0);
+          var init = $property(() => 0);
           return $memo(() => ++init.value, deps);
         });
         expect(func(), 1);
@@ -430,7 +430,7 @@ void main() {
         final listeners = $Listeners();
         var result = 0;
         final listener = (int i) {
-          final callCount = $cursor(() => 0);
+          final callCount = $property(() => 0);
           result = callCount.value += i;
         };
         final func = $bind0(() {
@@ -564,7 +564,7 @@ void main() {
 class _BoundObject with $Method {
   int inc([int set]) {
     return $method(inc, () {
-      final value = $cursor(() => -1);
+      final value = $property(() => -1);
       value.value++;
       if (set != null) value.value = set;
       return value.value;
@@ -573,7 +573,7 @@ class _BoundObject with $Method {
 
   int dec([int set]) {
     return $method(dec, () {
-      final value = $cursor(() => 1);
+      final value = $property(() => 1);
       value.value--;
       if (set != null) value.value = set;
       return value.value;

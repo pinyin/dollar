@@ -9,7 +9,7 @@ dynamic $bind<T extends Function>(T func,
   final handler = createHandler(_handler ?? (effect) {});
   assert(handler != null);
   final boundFunction = _handler != null
-      ? ($cursor(() => $BoundFunction()..context = _Context()).value)
+      ? ($property(() => $BoundFunction()..context = _Context()).value)
       : ($BoundFunction()..context = _Context());
 
   return boundFunction
@@ -88,15 +88,15 @@ T $isolate<T>(T func()) {
   return result;
 }
 
-$Cursor<T> $cursor<T>(T init()) {
-  final $Cursor<T> result = (_context.cursor ??= _$CursorImpl<T>()
-    ..value = $isolate(init)) as $Cursor<T>;
+$Property<T> $property<T>(T init()) {
+  final $Property<T> result =
+      (_context.cursor ??= _$PropertyImpl<T>()..value = init()) as $Property<T>;
   _context.cursorNext();
   return result;
 }
 
 T $switch<T>(Object key, T logic()) {
-  final contexts = $cursor(() => Map<Object, _Context>()).value;
+  final contexts = $property(() => Map<Object, _Context>()).value;
   if (logic == null) return null;
 
   final prevContext = _context;
@@ -119,29 +119,33 @@ dynamic $raise(Object effect) {
 
 void $defer(void callback()) {
   _deferred ??= LinkedHashMap();
-  _deferred[$cursor<dynamic>(() => null)] = callback;
+  _deferred[$property<dynamic>(() => null)] = callback;
 }
 
 typedef $EffectHandler = dynamic Function(Object effect);
 
 typedef $EffectHandlerCreator = $EffectHandler Function($EffectHandler parent);
 
-abstract class $Cursor<T> {
+abstract class $Property<T> {
   T get value;
+
   set value(T newValue);
 
   T get() => value;
+
   T set(T newValue) => value = newValue;
 }
 
-class _$CursorImpl<T> extends $Cursor<T> {
+class _$PropertyImpl<T> extends $Property<T> {
   @override
   T get value => _value;
+
   @override
   set value(T newValue) => _value = newValue;
 
   @override
   T get() => value;
+
   @override
   T set(T newValue) => value = newValue;
 
@@ -149,35 +153,35 @@ class _$CursorImpl<T> extends $Cursor<T> {
 }
 
 class _Context {
-  set cursor($Cursor status) => _cursor.cursor = status;
+  set cursor($Property status) => _property.value = status;
 
-  $Cursor get cursor => _cursor.cursor;
+  $Property get cursor => _property.value;
 
   void cursorNext() {
-    if (_cursor.next == null) _cursors.add(_$CursorInContext(null));
-    _cursor = _cursor.next;
+    if (_property.next == null) _properties.add(_$PropertyInContext(null));
+    _property = _property.next;
   }
 
-  void cursorReset() => _cursor = _cursors.first;
+  void cursorReset() => _property = _properties.first;
 
-  _$CursorInContext _cursor;
-  final _cursors = LinkedList<_$CursorInContext>()
-    ..addFirst(_$CursorInContext(null));
+  _$PropertyInContext _property;
+  final _properties = LinkedList<_$PropertyInContext>()
+    ..addFirst(_$PropertyInContext(null));
 
   _Context() {
-    _cursor = _cursors.first;
-    assert(_cursor != null);
+    _property = _properties.first;
+    assert(_property != null);
   }
 }
 
-class _$CursorInContext extends LinkedListEntry<_$CursorInContext> {
-  $Cursor cursor;
+class _$PropertyInContext extends LinkedListEntry<_$PropertyInContext> {
+  $Property value;
 
-  _$CursorInContext(this.cursor);
+  _$PropertyInContext(this.value);
 }
 
 _Context _context;
 
-LinkedHashMap<$Cursor, Function()> _deferred;
+LinkedHashMap<$Property, Function()> _deferred;
 
 $EffectHandler _handler;

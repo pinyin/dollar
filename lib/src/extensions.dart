@@ -95,9 +95,9 @@ T $unless<T>(bool condition, T run()) {
 }
 
 $Ref<T> $ref<T>(T value) {
-  final cursor = $cursor<_$RefImpl<T>>(() => _$RefImpl(value));
-  cursor.value.value = value;
-  return cursor.value;
+  final property = $property<_$RefImpl<T>>(() => _$RefImpl(value));
+  property.value.value = value;
+  return property.value;
 }
 
 final _ref = $ref;
@@ -107,24 +107,24 @@ extension $RefExtension<T> on T {
 }
 
 $Var<T> $var<T>(T init()) {
-  final didInit = $cursor(() => false);
-  final cursor = $cursor<$Var<T>>(() => null);
+  final didInit = $property(() => false);
+  final value = $property<$Var<T>>(() => null);
   $if(!didInit.value, () {
-    cursor.value = _$VarImpl<T>(
+    value.value = _$VarImpl<T>(
       init(),
       $bind2<void, T, T>(
-          (T from, T to) => $raise($VarUpdated(from, to, cursor))),
+          (T from, T to) => $raise($VarUpdated(from, to, value))),
     );
     didInit.value = true;
   });
-  return cursor.value;
+  return value.value;
 }
 
 T $cache<T>(T compute(), bool reusable) {
-  final didInit = $cursor(() => false);
-  final cursor = $cursor<T>(() => null);
+  final didInit = $property(() => false);
+  final cached = $property<T>(() => null);
   $if(!didInit.value || !reusable, () {
-    cursor.value = $bind0(compute, (parent) {
+    cached.value = $bind0(compute, (parent) {
       return (effect) {
         if (effect is $VarUpdated) didInit.value = false;
         parent(effect);
@@ -132,7 +132,7 @@ T $cache<T>(T compute(), bool reusable) {
     })();
     didInit.value = true;
   });
-  return cursor.value;
+  return cached.value;
 }
 
 T $final<T>(T init()) {
@@ -140,7 +140,7 @@ T $final<T>(T init()) {
 }
 
 T $prev<T>(T value) {
-  final curr = $cursor<T>(() => null);
+  final curr = $property<T>(() => null);
   final prev = curr.value;
   curr.value = value;
   return prev;
@@ -153,7 +153,7 @@ extension $Prev<T> on T {
 }
 
 T $distinct<T>(T value, [bool equals(T a, T b)]) {
-  final curr = $cursor<T>(() => null);
+  final curr = $property<T>(() => null);
   final shouldUpdate = curr.value == null ||
       !(equals?.call(curr.value, value) ?? curr.value == value);
   if (shouldUpdate) curr.value = value;
@@ -213,15 +213,15 @@ R $interpolate<T, R>(T value, R diff(T prev, T curr)) {
 }
 
 R $aggregate<T, R>(T value, R aggregator(R aggregate, T value)) {
-  final cursor = $cursor<R>(() => null);
-  cursor.value = aggregator(cursor.value, value);
-  return cursor.value;
+  final aggregated = $property<R>(() => null);
+  aggregated.value = aggregator(aggregated.value, value);
+  return aggregated.value;
 }
 
 T $generate<T>(T compute(T prev)) {
-  final cursor = $cursor<T>(() => null);
-  cursor.value = compute(cursor.value);
-  return cursor.value;
+  final generated = $property<T>(() => null);
+  generated.value = compute(generated.value);
+  return generated.value;
 }
 
 T $memo<T>(T compute(), Iterable deps) {
@@ -229,7 +229,7 @@ T $memo<T>(T compute(), Iterable deps) {
 }
 
 void $async(Function() work()) {
-  final cleanup = $cursor<Function()>(() => null);
+  final cleanup = $property<Function()>(() => null);
 
   final maybeCleanup = () => $if<void>(cleanup.value != null, cleanup.value);
   maybeCleanup();
@@ -242,18 +242,9 @@ void $effect(Function() effect(), Iterable deps) {
 }
 
 void $listen<T>(void callback(T event)) {
-  final cursor = $cursor(() => null);
+  final at = $property(() => null);
   final listener = $bind1(callback);
-  $raise($Listened(listener, cursor));
-}
-
-void $rollback<T>(T rollback(Object from)) {
-  final cursor = $cursor(() => null);
-  $raise($Rollback(rollback, cursor));
-}
-
-void $commit() {
-  $raise($Commit());
+  $raise($Listened(listener, at));
 }
 
 abstract class $Ref<T> {
@@ -291,7 +282,7 @@ class _$VarImpl<T> extends $Var<T> {
 }
 
 class $VarUpdated<T> {
-  final $Cursor at;
+  final $Property at;
   final T from;
   final T to;
 
@@ -309,7 +300,7 @@ class $VarUpdated<T> {
 }
 
 class $Listened<T> {
-  final $Cursor at;
+  final $Property at;
   final Function callback;
   final Type type;
 
@@ -329,15 +320,6 @@ class $Listened<T> {
 }
 
 class $ContextTerminated {}
-
-class $Rollback {
-  final dynamic Function(Object from) rollback;
-  final $Cursor cursor;
-
-  $Rollback(this.rollback, this.cursor);
-}
-
-class $Commit {}
 
 $EffectHandlerCreator $onListened($Listeners listeners) {
   return (parent) {
@@ -364,25 +346,25 @@ $EffectHandlerCreator $onVarUpdated(dynamic onUpdate($VarUpdated effect)) {
 }
 
 class $Listeners {
-  void add(Type eventType, Function callback, $Cursor at) {
+  void add(Type eventType, Function callback, $Property at) {
     assert(_types[at] == null || _types[at] == eventType);
     _types[at] = eventType;
-    (_cursors[eventType] ??= {}).add(at);
+    (_properties[eventType] ??= {}).add(at);
     _callbacks[at] = callback;
   }
 
   void trigger<T>(T event) {
-    for (final cursor in (_cursors[event.runtimeType] ??= {})) {
-      final callback = _callbacks[cursor];
+    for (final property in (_properties[event.runtimeType] ??= {})) {
+      final callback = _callbacks[property];
       if (callback is Function) {
         callback(event);
       }
     }
   }
 
-  final _cursors = Map<Type, Set<$Cursor>>();
-  final _callbacks = Map<$Cursor, Function>();
-  final _types = Map<$Cursor, Type>();
+  final _properties = Map<Type, Set<$Property>>();
+  final _callbacks = Map<$Property, Function>();
+  final _types = Map<$Property, Type>();
 }
 
 // copied from package:collection
