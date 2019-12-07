@@ -95,7 +95,7 @@ $Cursor<T> $cursor<T>(T init()) {
   return result;
 }
 
-T $fork<T>(Object key, T logic()) {
+T $switch<T>(Object key, T logic()) {
   final contexts = $cursor(() => Map<Object, _Context>()).value;
   if (logic == null) return null;
 
@@ -104,6 +104,7 @@ T $fork<T>(Object key, T logic()) {
   _context.cursorReset();
   final result = logic();
   _context = prevContext;
+  // TODO allow cleanup
 
   return result;
 }

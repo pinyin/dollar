@@ -63,12 +63,25 @@ extension $Bind0<R> on R Function() {
       $bind0(this, createHandler);
 }
 
-R $switch<T, R>(T value, Map<T, R Function()> handlers) {
-  return $fork(value, handlers[value]);
+final _$raise = $raise;
+
+mixin $BindObject {
+  T $method<T>(Function method, T Function() logic) {
+    _bind ??= $Bind2((Function method, dynamic Function() callback) {
+      return $switch<dynamic>(method, callback);
+    }).$bind();
+    return _bind(method, logic) as T;
+  }
+
+  void $raise(Object effect) {
+    $method<void>($raise, () => _$raise(effect));
+  }
+
+  dynamic Function(Function method, dynamic Function()) _bind;
 }
 
 T $if<T>(bool condition, T then(), {T orElse()}) {
-  return $fork(condition, () {
+  return $switch(condition, () {
     return condition
         ? then != null ? then() : null
         : orElse != null ? orElse() : null;

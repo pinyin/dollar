@@ -72,7 +72,7 @@ void main() {
     group('fork', () {
       test('should provide multiple contexts based on key', () {
         final func = $bind1((int key) {
-          return $fork(key, () {
+          return $switch(key, () {
             return $cursor(() => 0);
           });
         });
@@ -127,6 +127,18 @@ void main() {
   });
 
   group('extensions', () {
+    group('BindObject', () {
+      final obj = _BindObject();
+      test('should provide a dollar context', () {
+        expect(obj.inc(0), 0);
+        expect(obj.inc(2), 2);
+        expect(obj.inc(), 3);
+        expect(obj.dec(), 0);
+        expect(obj.dec(3), 3);
+        expect(obj.dec(), 2);
+        expect(obj.inc(), 4);
+      });
+    });
     group('if', () {
       test('should call function by condition', () {
         final func = $bind1((bool input) {
@@ -160,27 +172,6 @@ void main() {
         func(false);
         expect(a?.value, 5);
         expect(b?.value, 1);
-      });
-    });
-
-    group('switch', () {
-      test('should call function by value', () {
-        final values = <dynamic>[];
-        final func = $bind1((Object input) {
-          return $switch(input, {
-            'a': () => values.add(1),
-            'b': () => values.add(2),
-            'c': () => values.add(3),
-            'd': () => values.add(4),
-          });
-        });
-        func('d');
-        func('a');
-        func('c');
-        func('b');
-        func('e');
-        func('a');
-        expect(values, [4, 1, 3, 2, 1]);
       });
     });
 
@@ -326,15 +317,15 @@ void main() {
 
     group('shallowEquals', () {
       test('should return the shallow identicality of value & previous value',
-          () {
-        final func = $bind1((Iterable value) {
-          return value.$isShallowEqual;
-        });
-        expect(func(<int>[1, 2]), false);
-        expect(func(<int>[1, 2]), true);
-        expect(func(<int>[1]), false);
-        expect(func(<int>[3]), false);
-      });
+              () {
+            final func = $bind1((Iterable value) {
+              return value.$isShallowEqual;
+            });
+            expect(func(<int>[1, 2]), false);
+            expect(func(<int>[1, 2]), true);
+            expect(func(<int>[1]), false);
+            expect(func(<int>[3]), false);
+          });
     });
 
     group('while', () {
@@ -367,29 +358,29 @@ void main() {
 
     group('interpolate', () {
       test('should provide value and previous value to interpolate function',
-          () {
-        final func = $bind1((int value) {
-          return $interpolate(
-              value, (int prev, int curr) => (prev ?? 0) + curr);
-        });
-        expect(func(1), 1);
-        expect(func(2), 3);
-        expect(func(2), 4);
-        expect(func(1), 3);
-      });
+              () {
+            final func = $bind1((int value) {
+              return $interpolate(
+                  value, (int prev, int curr) => (prev ?? 0) + curr);
+            });
+            expect(func(1), 1);
+            expect(func(2), 3);
+            expect(func(2), 4);
+            expect(func(1), 3);
+          });
     });
 
     group('aggregate', () {
       test('should provide value and aggregated value to aggregate function',
-          () {
-        final func = $bind1((int value) {
-          return $aggregate(value, (int prev, int curr) => (prev ?? 0) + curr);
-        });
-        expect(func(1), 1);
-        expect(func(2), 3);
-        expect(func(2), 5);
-        expect(func(1), 6);
-      });
+              () {
+            final func = $bind1((int value) {
+              return $aggregate(value, (int prev, int curr) => (prev ?? 0) + curr);
+            });
+            expect(func(1), 1);
+            expect(func(2), 3);
+            expect(func(2), 5);
+            expect(func(1), 6);
+          });
     });
 
     group('generate', () {
@@ -422,13 +413,13 @@ void main() {
 
     group('listen', () {
       test('should emit listener event', () {
-        final effects = <dynamic>[];
+        final effects = <$Listened>[];
         final listener = (int i) {
           return;
         };
         final func = $bind0(() {
           $listen(listener);
-        }, (_) => effects.add);
+        }, (_) => (l) => effects.add(l as $Listened));
         func();
         func();
         expect(effects.length, 2);
@@ -567,4 +558,24 @@ void main() {
       });
     });
   });
+}
+
+class _BindObject with $BindObject {
+  int inc([int set]) {
+    return $method(inc, () {
+      final value = $cursor(() => -1);
+      value.value++;
+      if (set != null) value.value = set;
+      return value.value;
+    });
+  }
+
+  int dec([int set]) {
+    return $method(dec, () {
+      final value = $cursor(() => 1);
+      value.value--;
+      if (set != null) value.value = set;
+      return value.value;
+    });
+  }
 }
