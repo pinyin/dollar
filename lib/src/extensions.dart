@@ -70,14 +70,12 @@ mixin $Method {
     _bind ??= $isolate(() {
       return $Bind2((Function method, dynamic Function() callback) {
         return $switch<dynamic>(method, callback);
-      }).$bind();
+      }).$bind((_) => $handle);
     });
     return _bind(method, logic) as T;
   }
 
-  void $raise(Object effect) {
-    $method<void>($raise, () => _$raise(effect));
-  }
+  void $handle(Object effect) {}
 
   dynamic Function(Function method, dynamic Function()) _bind;
 }
@@ -124,10 +122,10 @@ T $cache<T>(T compute(), bool reusable) {
   final didInit = $property(() => false);
   final cached = $property<T>(() => null);
   $if(!didInit.value || !reusable, () {
-    cached.value = $bind0(compute, (parent) {
+    cached.value = $bind0(compute, (handle) {
       return (effect) {
         if (effect is $VarUpdated) didInit.value = false;
-        parent(effect);
+        handle(effect);
       };
     })();
     didInit.value = true;
@@ -322,24 +320,24 @@ class $Listened<T> {
 class $ContextTerminated {}
 
 $EffectHandlerCreator $onListened($Listeners listeners) {
-  return (parent) {
+  return (handle) {
     return (effect) {
       if (effect is $Listened) {
         listeners.add(effect.type, effect.callback, effect.at);
       } else {
-        return parent(effect);
+        return handle(effect);
       }
     };
   };
 }
 
 $EffectHandlerCreator $onVarUpdated(dynamic onUpdate($VarUpdated effect)) {
-  return (parent) {
+  return (handle) {
     return (effect) {
       if (effect is $VarUpdated) {
         return onUpdate(effect);
       } else {
-        return parent(effect);
+        return handle(effect);
       }
     };
   };

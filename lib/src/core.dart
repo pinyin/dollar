@@ -25,7 +25,7 @@ extension $Bind on Function {
 }
 
 final $EffectHandlerCreator _createDefaultHandler =
-    (parent) => (effect) => parent(effect);
+    (context) => (effect) => context(effect);
 
 class $BoundFunction {
   Function func;
@@ -124,7 +124,7 @@ void $defer(void callback()) {
 
 typedef $EffectHandler = dynamic Function(Object effect);
 
-typedef $EffectHandlerCreator = $EffectHandler Function($EffectHandler parent);
+typedef $EffectHandlerCreator = $EffectHandler Function($EffectHandler context);
 
 abstract class $Property<T> {
   T get value;
