@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:collection';
 
 dynamic $bind<T extends Function>(T func,
@@ -88,9 +89,9 @@ T $isolate<T>(T func()) {
   return result;
 }
 
-$Property<T> $property<T>(T init()) {
+$Property<T> $property<T>([T init()]) {
   final $Property<T> result =
-      (_context.cursor ??= _$PropertyImpl<T>()..value = init()) as $Property<T>;
+      (_context.cursor ??= _$PropertyImpl<T>()..value = init?.call()) as $Property<T>;
   _context.cursorNext();
   return result;
 }
@@ -120,6 +121,14 @@ dynamic $raise(Object effect) {
 void $defer(void callback()) {
   _deferred ??= LinkedHashMap();
   _deferred[$property<dynamic>(() => null)] = callback;
+}
+
+final _$defer = $defer;
+
+extension FunctionDefer on Function() {
+  void $defer() {
+    _$defer(this);
+  }
 }
 
 typedef $EffectHandler = dynamic Function(Object effect);

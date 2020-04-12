@@ -291,43 +291,6 @@ void main() {
       });
     });
 
-    group('equals', () {
-      test('should return the identicality of value & previous value', () {
-        final func = $bind1((Object value) {
-          return value.$isEqual;
-        });
-        expect(func(1), false);
-        expect(func(2), false);
-        expect(func(2), true);
-        expect(func(3), false);
-      });
-    });
-
-    group('identical', () {
-      test('should return the identicality of value & previous value', () {
-        final func = $bind1((Object value) {
-          return value.$isIdentical;
-        });
-        expect(func(1), false);
-        expect(func(2), false);
-        expect(func(2), true);
-        expect(func(3), false);
-      });
-    });
-
-    group('shallowEquals', () {
-      test('should return the shallow identicality of value & previous value',
-          () {
-        final func = $bind1((Iterable value) {
-          return value.$isShallowEqual;
-        });
-        expect(func(<int>[1, 2]), false);
-        expect(func(<int>[1, 2]), true);
-        expect(func(<int>[1]), false);
-        expect(func(<int>[3]), false);
-      });
-    });
-
     group('while', () {
       test('should run effect as long as condition returns true', () {
         final func = $bind1((int loop) {
@@ -372,16 +335,15 @@ void main() {
 
     group('aggregate', () {
       test('should provide value and aggregated value to aggregate function',
-              () {
-            final func = $bind1((int value) {
-              return $aggregate(
-                  value, (int prev, int curr) => (prev ?? 0) + curr);
-            });
-            expect(func(1), 1);
-            expect(func(2), 3);
-            expect(func(2), 5);
-            expect(func(1), 6);
-          });
+          () {
+        final func = $bind1((int value) {
+          return $aggregate(value, (int prev, int curr) => (prev ?? 0) + curr);
+        });
+        expect(func(1), 1);
+        expect(func(2), 3);
+        expect(func(2), 5);
+        expect(func(1), 6);
+      });
     });
 
     group('generate', () {

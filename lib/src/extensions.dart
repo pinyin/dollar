@@ -63,28 +63,28 @@ extension $Bind0<R> on R Function() {
       $bind0(this, createHandler);
 }
 
-final _$raise = $raise;
-
 mixin $Method {
   T $method<T>(Function method, T Function() logic) {
     _bind ??= $isolate(() {
       return $Bind2((Function method, dynamic Function() callback) {
         return $switch<dynamic>(method, callback);
-      }).$bind((_) => $handle);
+      }).$bind($handle);
     });
     return _bind(method, logic) as T;
   }
 
-  void $handle(Object effect) {}
+  $EffectHandlerCreator get $handle => (_) => (_) {};
+
+  void $reset() {
+    _bind = null;
+  }
 
   dynamic Function(Function method, dynamic Function()) _bind;
 }
 
 T $if<T>(bool condition, T then(), {T orElse()}) {
   return $switch(condition, () {
-    return condition
-        ? then != null ? then() : null
-        : orElse != null ? orElse() : null;
+    return condition ? then?.call() : orElse?.call();
   });
 }
 
@@ -101,7 +101,7 @@ $Ref<T> $ref<T>(T value) {
 final _ref = $ref;
 
 extension $RefExtension<T> on T {
-  $Ref<T> get $ref => _ref<T>(this as T);
+  $Ref<T> get $ref => _ref<T>(this);
 }
 
 $Var<T> $var<T>(T init()) {
@@ -147,7 +147,7 @@ T $prev<T>(T value) {
 final _prev = $prev;
 
 extension $Prev<T> on T {
-  T get $prev => _prev<T>(this as T);
+  T get $prev => _prev<T>(this);
 }
 
 T $distinct<T>(T value, [bool equals(T a, T b)]) {
@@ -156,30 +156,6 @@ T $distinct<T>(T value, [bool equals(T a, T b)]) {
       !(equals?.call(curr.value, value) ?? curr.value == value);
   if (shouldUpdate) curr.value = value;
   return curr.value;
-}
-
-bool $equals<T>(T value) {
-  return value == $prev(value);
-}
-
-extension $Equals on Object {
-  bool get $isEqual => $equals(this);
-}
-
-bool $identical<T>(T value) {
-  return identical(value, $prev(value));
-}
-
-extension $Identical on Object {
-  bool get $isIdentical => $identical(this);
-}
-
-bool $shallowEquals(Iterable value) {
-  return _iterableEquals<dynamic>(value, $prev(value));
-}
-
-extension $ShallowEquals on Iterable {
-  bool get $isShallowEqual => $shallowEquals(this);
 }
 
 T $while<T>(bool condition(), T compute()) {
@@ -222,8 +198,8 @@ T $generate<T>(T compute(T prev)) {
   return generated.value;
 }
 
-T $memo<T>(T compute(), Iterable deps) {
-  return $cache(compute, $shallowEquals(deps));
+T $memo<T>(T compute(), Iterable<dynamic> deps) {
+  return $cache(compute, deps.shallowEqualsTo($prev(deps)));
 }
 
 void $async(Function() work()) {
@@ -235,7 +211,7 @@ void $async(Function() work()) {
   $listen(($ContextTerminated _) => maybeCleanup());
 }
 
-void $effect(Function() effect(), Iterable deps) {
+void $effect(Function() effect(), Iterable<dynamic> deps) {
   $memo(() => $async(effect), deps);
 }
 
@@ -317,7 +293,9 @@ class $Listened<T> {
         type = T;
 }
 
-class $ContextTerminated {}
+class $ContextTerminated {
+  const $ContextTerminated();
+}
 
 $EffectHandlerCreator $onListened($Listeners listeners) {
   return (handle) {
@@ -363,18 +341,4 @@ class $Listeners {
   final _properties = Map<Type, Set<$Property>>();
   final _callbacks = Map<$Property, Function>();
   final _types = Map<$Property, Type>();
-}
-
-// copied from package:collection
-bool _iterableEquals<E>(Iterable<E> elements1, Iterable<E> elements2) {
-  if (identical(elements1, elements2)) return true;
-  if (elements1 == null || elements2 == null) return false;
-  var it1 = elements1.iterator;
-  var it2 = elements2.iterator;
-  while (true) {
-    bool hasNext = it1.moveNext();
-    if (hasNext != it2.moveNext()) return false;
-    if (!hasNext) return true;
-    if (it1.current != it2.current) return false;
-  }
 }
