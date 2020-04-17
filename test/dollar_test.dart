@@ -69,7 +69,7 @@ void main() {
       });
     });
 
-    group('fork', () {
+    group('switch', () {
       test('should provide multiple contexts based on key', () {
         final func = $bind1((int key) {
           return $switch(key, () {
@@ -81,29 +81,6 @@ void main() {
         expect(func(0).value, 1);
         expect(func(1).value, 0);
         expect(func(2).value, 2);
-      });
-    });
-
-    group('defer', () {
-      test('should run callback after function exits', () {
-        int runCount = 0;
-        int deferCount = 0;
-        final func = $bind1((bool shouldThrow) {
-          $defer(() {
-            deferCount++;
-          });
-          if (shouldThrow) throw 1;
-          runCount++;
-        });
-        func(false);
-        expect(runCount, 1);
-        expect(deferCount, 1);
-        expect(() => func(true), throwsA(1));
-        expect(runCount, 1);
-        expect(deferCount, 2);
-        func(false);
-        expect(runCount, 2);
-        expect(deferCount, 3);
       });
     });
 

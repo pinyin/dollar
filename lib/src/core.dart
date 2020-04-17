@@ -3,13 +3,11 @@ import 'dart:collection';
 
 dynamic $bind<T extends Function>(T func,
     [$EffectHandlerCreator createHandler]) {
-  // TODO support function with arbitrary signature
-  // TODO nullability of createHandler must be consistent across calls
-
   createHandler ??= _createDefaultHandler;
   final handler = createHandler(_handler ?? (effect) {});
   assert(handler != null);
-  final boundFunction = _handler != null
+  final isInAnotherBindFunction = _handler != null;
+  final boundFunction = isInAnotherBindFunction
       ? ($property(() => $BoundFunction()..context = _Context()).value)
       : ($BoundFunction()..context = _Context());
 
@@ -28,6 +26,8 @@ extension $Bind on Function {
 final $EffectHandlerCreator _createDefaultHandler =
     (context) => (effect) => context(effect);
 
+enum _HooksZoneValue { handler, context }
+
 class $BoundFunction {
   Function func;
   _Context context;
@@ -37,61 +37,30 @@ class $BoundFunction {
   dynamic noSuchMethod(Invocation invocation) {
     context.cursorReset();
 
-    final prevHandler = _handler;
-    final prevContext = _context;
-    final prevDeferred = _deferred;
-    dynamic result;
-
-    try {
-      _handler = handler;
-      _context = context;
-      _deferred = null;
-
-      result = Function.apply(
-          func, invocation.positionalArguments, invocation.namedArguments);
-      // TODO support generator
-      // we may never be able to support async functions though.
-
-      assert(identical(_context, context));
-      assert(identical(_handler, handler));
-    } finally {
-      if (_deferred != null) {
-        for (final cleanup in _deferred.values) {
-          cleanup();
-        }
-      }
-      _deferred = prevDeferred;
-      _context = prevContext;
-      _handler = prevHandler;
-    }
-
-    return result;
+    return runZoned<dynamic>(
+      () => Function.apply(
+          func, invocation.positionalArguments, invocation.namedArguments),
+      zoneValues: <_HooksZoneValue, dynamic>{
+        _HooksZoneValue.handler: handler,
+        _HooksZoneValue.context: context,
+      },
+    );
   }
 }
 
 T $isolate<T>(T func()) {
-  final prevHandler = _handler;
-  final prevContext = _context;
-  final prevDeferred = _deferred;
-
-  _handler = null;
-  _context = null;
-  _deferred = null;
-
-  final result = func();
-
-  assert(identical(_context, null));
-  assert(identical(_handler, null));
-
-  _deferred = prevDeferred;
-  _context = prevContext;
-  _handler = prevHandler;
-  return result;
+  return runZoned<T>(
+    func,
+    zoneValues: <_HooksZoneValue, dynamic>{
+      _HooksZoneValue.handler: null,
+      _HooksZoneValue.context: null,
+    },
+  );
 }
 
 $Property<T> $property<T>([T init()]) {
-  final $Property<T> result =
-      (_context.cursor ??= _$PropertyImpl<T>()..value = init?.call()) as $Property<T>;
+  final $Property<T> result = (_context.cursor ??= _$PropertyImpl<T>()
+    ..value = init?.call()) as $Property<T>;
   _context.cursorNext();
   return result;
 }
@@ -99,36 +68,27 @@ $Property<T> $property<T>([T init()]) {
 T $switch<T>(Object key, T logic()) {
   final contexts = $property(() => Map<Object, _Context>()).value;
   if (logic == null) return null;
-
-  final prevContext = _context;
-  _context = contexts[key] ??= _Context();
-  _context.cursorReset();
-  final result = logic();
-  _context = prevContext;
+  return runZoned(
+    () {
+      _context.cursorReset();
+      return logic();
+    },
+    zoneValues: <_HooksZoneValue, dynamic>{
+      _HooksZoneValue.handler: _handler,
+      _HooksZoneValue.context: contexts[key] ??= _Context(),
+    },
+  );
   // TODO allow cleanup
-
-  return result;
 }
 
 dynamic $raise(Object effect) {
-  final prevContext = _context;
-  _context = null;
-  final dynamic result = _handler(effect);
-  _context = prevContext;
-  return result;
-}
-
-void $defer(void callback()) {
-  _deferred ??= LinkedHashMap();
-  _deferred[$property<dynamic>(() => null)] = callback;
-}
-
-final _$defer = $defer;
-
-extension FunctionDefer on Function() {
-  void $defer() {
-    _$defer(this);
-  }
+  return runZoned<dynamic>(
+    () => _handler(effect),
+    zoneValues: <_HooksZoneValue, dynamic>{
+      _HooksZoneValue.handler: _handler,
+      _HooksZoneValue.context: null,
+    },
+  );
 }
 
 typedef $EffectHandler = dynamic Function(Object effect);
@@ -189,8 +149,14 @@ class _$PropertyInContext extends LinkedListEntry<_$PropertyInContext> {
   _$PropertyInContext(this.value);
 }
 
-_Context _context;
+_Context get _context => Zone.current[_HooksZoneValue.context] as _Context;
 
-LinkedHashMap<$Property, Function()> _deferred;
+$EffectHandler get _handler =>
+    Zone.current[_HooksZoneValue.handler] as $EffectHandler;
 
-$EffectHandler _handler;
+class $Exception {
+  final Object error;
+  final StackTrace stack;
+
+  $Exception(this.error, this.stack);
+}
