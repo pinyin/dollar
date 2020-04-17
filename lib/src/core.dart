@@ -26,7 +26,7 @@ extension $Bind on Function {
 final $EffectHandlerCreator _createDefaultHandler =
     (context) => (effect) => context(effect);
 
-enum _HooksZoneValue { handler, context }
+enum _HooksZoneValue { handler, cursor }
 
 class $BoundFunction {
   Function func;
@@ -35,14 +35,12 @@ class $BoundFunction {
 
   @override
   dynamic noSuchMethod(Invocation invocation) {
-    context.cursorReset();
-
     return runZoned<dynamic>(
       () => Function.apply(
           func, invocation.positionalArguments, invocation.namedArguments),
       zoneValues: <_HooksZoneValue, dynamic>{
         _HooksZoneValue.handler: handler,
-        _HooksZoneValue.context: context,
+        _HooksZoneValue.cursor: context.cursor,
       },
     );
   }
@@ -53,29 +51,23 @@ T $isolate<T>(T func()) {
     func,
     zoneValues: <_HooksZoneValue, dynamic>{
       _HooksZoneValue.handler: null,
-      _HooksZoneValue.context: null,
+      _HooksZoneValue.cursor: null,
     },
   );
 }
 
 $Property<T> $property<T>([T init()]) {
-  final $Property<T> result = (_context.cursor ??= _$PropertyImpl<T>()
-    ..value = init?.call()) as $Property<T>;
-  _context.cursorNext();
-  return result;
+  return _cursor.next<T>()..value ??= init?.call();
 }
 
 T $switch<T>(Object key, T logic()) {
   final contexts = $property(() => Map<Object, _Context>()).value;
   if (logic == null) return null;
   return runZoned(
-    () {
-      _context.cursorReset();
-      return logic();
-    },
+    () => logic(),
     zoneValues: <_HooksZoneValue, dynamic>{
       _HooksZoneValue.handler: _handler,
-      _HooksZoneValue.context: contexts[key] ??= _Context(),
+      _HooksZoneValue.cursor: (contexts[key] ??= _Context()).cursor,
     },
   );
   // TODO allow cleanup
@@ -86,7 +78,7 @@ dynamic $raise(Object effect) {
     () => _handler(effect),
     zoneValues: <_HooksZoneValue, dynamic>{
       _HooksZoneValue.handler: _handler,
-      _HooksZoneValue.context: null,
+      _HooksZoneValue.cursor: null,
     },
   );
 }
@@ -105,7 +97,7 @@ abstract class $Property<T> {
   T set(T newValue) => value = newValue;
 }
 
-class _$PropertyImpl<T> extends $Property<T> {
+class _PropertyImpl<T> extends $Property<T> {
   @override
   T get value => _value;
 
@@ -122,34 +114,32 @@ class _$PropertyImpl<T> extends $Property<T> {
 }
 
 class _Context {
-  set cursor($Property status) => _property.value = status;
+  _Cursor get cursor => _Cursor(_properties.first);
 
-  $Property get cursor => _property.value;
-
-  void cursorNext() {
-    if (_property.next == null) _properties.add(_$PropertyInContext(null));
-    _property = _property.next;
-  }
-
-  void cursorReset() => _property = _properties.first;
-
-  _$PropertyInContext _property;
-  final _properties = LinkedList<_$PropertyInContext>()
-    ..addFirst(_$PropertyInContext(null));
-
-  _Context() {
-    _property = _properties.first;
-    assert(_property != null);
-  }
+  final _properties = LinkedList<_PropertyInContext>()
+    ..addFirst(_PropertyInContext(null));
 }
 
-class _$PropertyInContext extends LinkedListEntry<_$PropertyInContext> {
+class _Cursor {
+  $Property<T> next<T>() {
+    if (_entry.next == null)
+      _entry.list.add(_PropertyInContext(_PropertyImpl<T>()));
+    _entry = _entry.next;
+    return _entry.value as $Property<T>;
+  }
+
+  _PropertyInContext _entry;
+
+  _Cursor(this._entry);
+}
+
+class _PropertyInContext extends LinkedListEntry<_PropertyInContext> {
   $Property value;
 
-  _$PropertyInContext(this.value);
+  _PropertyInContext(this.value);
 }
 
-_Context get _context => Zone.current[_HooksZoneValue.context] as _Context;
+_Cursor get _cursor => Zone.current[_HooksZoneValue.cursor] as _Cursor;
 
 $EffectHandler get _handler =>
     Zone.current[_HooksZoneValue.handler] as $EffectHandler;

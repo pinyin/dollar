@@ -67,6 +67,29 @@ void main() {
         func();
         expect(property?.value, 2);
       });
+
+      test('should keep value across async calls', () async {
+        final List<$Property<int>> list = [];
+        final func = $bind0(() async {
+          final a = $property(() => 0);
+          list.add(a);
+          a.value++;
+          await Future<dynamic>.value();
+          await Future<dynamic>.value();
+          final b = $property(() => 0);
+          list.add(b);
+          b.value++;
+        });
+        func();
+        expect(list.map((n) => n.value), [1]);
+        await Future<dynamic>.value();
+        func();
+        expect(list.map((n) => n.value), [2, 2]);
+        await Future<dynamic>.value();
+        expect(list.map((n) => n.value), [2, 2, 1]);
+        await Future<dynamic>.value();
+        expect(list.map((n) => n.value), [2, 2, 2, 2]);
+      });
     });
 
     group('switch', () {
