@@ -202,7 +202,7 @@ T $memo<T>(T compute(), Iterable<dynamic> deps) {
   return $cache(compute, deps.shallowEqualsTo($prev(deps)));
 }
 
-void $async(Function() work()) {
+void $effect(Function() work()) {
   final cleanup = $property<Function()>(() => null);
 
   final maybeCleanup = () => $if<void>(cleanup.value != null, cleanup.value);
@@ -211,8 +211,12 @@ void $async(Function() work()) {
   $listen(($ContextTerminated _) => maybeCleanup());
 }
 
-void $effect(Function() effect(), Iterable<dynamic> deps) {
-  $memo(() => $async(effect), deps);
+final _effect = $effect;
+
+extension $Effect on Function() Function() {
+  void $effect() {
+    _effect(this);
+  }
 }
 
 void $listen<T>(void callback(T event)) {
