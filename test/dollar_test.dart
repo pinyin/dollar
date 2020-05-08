@@ -306,7 +306,7 @@ void main() {
     });
 
     group('forEach', () {
-      test('should apply binded function on each element of iterable', () {
+      test('should apply bound function on each element of iterable', () {
         final list = <int>[1, 2, 3, 4];
         final result = <int>[];
         final sideEffects = <int>[];
@@ -405,13 +405,13 @@ void main() {
       });
     });
 
-    group('async', () {
+    group('effect', () {
       test('should run one instance of work', () {
         final listeners = $Listeners();
         var closeCount = 0;
         var result = 0;
         final func = $bind0(() {
-          $async(() {
+          $effect(() {
             result++;
             return () => closeCount++;
           });
@@ -420,32 +420,6 @@ void main() {
         expect(result, 1);
         expect(closeCount, 0);
         func();
-        expect(result, 2);
-        expect(closeCount, 1);
-        listeners.trigger($ContextTerminated());
-        expect(result, 2);
-        expect(closeCount, 2);
-      });
-    });
-
-    group('effect', () {
-      test('should run one instance of work when deps are updated', () {
-        final listeners = $Listeners();
-        var closeCount = 0;
-        var result = 0;
-        final func = $bind1((Iterable deps) {
-          $effect(() {
-            result++;
-            return () => closeCount++;
-          }, deps);
-        }, $onListened(listeners));
-        func(<dynamic>[0, 1]);
-        expect(result, 1);
-        expect(closeCount, 0);
-        func(<dynamic>[0, 1]);
-        expect(result, 1);
-        expect(closeCount, 0);
-        func(<dynamic>[1, 1]);
         expect(result, 2);
         expect(closeCount, 1);
         listeners.trigger($ContextTerminated());

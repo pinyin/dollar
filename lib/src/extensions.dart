@@ -204,11 +204,9 @@ T $memo<T>(T compute(), Iterable<dynamic> deps) {
 
 void $effect(Function() work()) {
   final cleanup = $property<Function()>(() => null);
-
-  final maybeCleanup = () => $if<void>(cleanup.value != null, cleanup.value);
-  maybeCleanup();
+  cleanup.value?.call();
   cleanup.value = work();
-  $listen(($ContextTerminated _) => maybeCleanup());
+  $listen(($ContextTerminated _) => cleanup.value?.call());
 }
 
 final _effect = $effect;
