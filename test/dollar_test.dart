@@ -124,6 +124,46 @@ void main() {
         expect(effects, [0, 1]);
       });
     });
+
+    group('reset', () {
+      test('should clear existing context after calling \$reset', () {
+        final func = $bind1((bool shouldReset) {
+          final property = $property(() => -1);
+          property.value++;
+          if (shouldReset) $reset();
+          return property.value;
+        });
+
+        expect(func(false), 0);
+        expect(func(false), 1);
+        expect(func(false), 2);
+        expect(func(true), 3);
+        expect(func(false), 0);
+        expect(func(false), 1);
+      });
+      test('should only clear one level of context', () {
+        final func = $bind1((bool shouldReset) {
+          final inner = $bind1((bool shouldReset) {
+            final property = $property(() => -1);
+            property.value++;
+            if (shouldReset) $reset();
+            return property.value;
+          })(shouldReset);
+
+          final property = $property(() => -1);
+          property.value++;
+
+          return [inner, property.value];
+        });
+
+        expect(func(false), [0, 0]);
+        expect(func(false), [1, 1]);
+        expect(func(false), [2, 2]);
+        expect(func(true), [3, 3]);
+        expect(func(false), [0, 4]);
+        expect(func(false), [1, 5]);
+      });
+    });
   });
 
   group('extensions', () {

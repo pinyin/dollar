@@ -3,13 +3,27 @@ import 'dart:collection';
 
 dynamic $bind<T extends Function>(T func,
     [$EffectHandlerCreator createHandler]) {
-  createHandler ??= _createDefaultHandler;
-  final handler = createHandler(_handler ?? (effect) {});
-  assert(handler != null);
   final isInAnotherBindFunction = _handler != null;
-  final boundFunction = isInAnotherBindFunction
-      ? ($property(() => $BoundFunction()..context = _Context()).value)
+  $Property<$BoundFunction> propertyInParent;
+  final $BoundFunction boundFunction = isInAnotherBindFunction
+      ? (propertyInParent =
+              $property(() => $BoundFunction()..context = _Context()))
+          .value
       : ($BoundFunction()..context = _Context());
+
+  createHandler ??= _createDefaultHandler;
+  final parentHandler = _handler;
+  final handler = createHandler((effect) {
+    if (effect == _resetEffect) {
+      if (isInAnotherBindFunction) {
+        propertyInParent.value = null;
+      } else {
+        boundFunction.context = _Context();
+      }
+    } else {
+      parentHandler?.call(effect);
+    }
+  });
 
   return boundFunction
     ..handler = handler
@@ -24,7 +38,7 @@ extension $Bind on Function {
 }
 
 final $EffectHandlerCreator _createDefaultHandler =
-    (context) => (effect) => context(effect);
+    (parent) => (effect) => parent(effect);
 
 enum _HooksZoneValue { handler, cursor }
 
@@ -83,9 +97,14 @@ dynamic $raise(Object effect) {
   );
 }
 
+const _resetEffect = Object();
+void $reset() {
+  $raise(_resetEffect);
+}
+
 typedef $EffectHandler = void Function(Object effect);
 
-typedef $EffectHandlerCreator = $EffectHandler Function($EffectHandler context);
+typedef $EffectHandlerCreator = $EffectHandler Function($EffectHandler parent);
 
 abstract class $Property<T> {
   T get value;
