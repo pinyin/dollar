@@ -114,7 +114,7 @@ void main() {
           final property = $property(() => -1);
           property.value++;
           return property.value;
-        }, (_) => (effect) => effect is $Bound ? reset = effect : null);
+        }, (_) => (effect) => effect is $Reset ? reset = effect : null);
 
         expect(func(), 0);
         expect(func(), 1);
@@ -131,7 +131,7 @@ void main() {
             final property = $property(() => -1);
             property.value++;
             return property.value;
-          }, (_) => (effect) => effect is $Bound ? reset = effect : null)();
+          }, (_) => (effect) => effect is $Reset ? reset = effect : null)();
 
           final property = $property(() => -1);
           property.value++;

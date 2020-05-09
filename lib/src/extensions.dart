@@ -68,7 +68,7 @@ mixin $Method {
     _bind ??= $isolate(() {
       return $Bind2((Function method, dynamic Function() callback) {
         return $switch<dynamic>(method, callback);
-      }).$bind($handle);
+      }).$bind($combineHandlers([$onReset((r) => _reset = r), $handle]));
     });
     return _bind(method, logic) as T;
   }
@@ -76,8 +76,10 @@ mixin $Method {
   $EffectHandlerCreator get $handle => (_) => (_) {};
 
   void $reset() {
-    _bind = null;
+    _reset();
   }
+
+  $Reset _reset;
 
   dynamic Function(Function method, dynamic Function()) _bind;
 }
