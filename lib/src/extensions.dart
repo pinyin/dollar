@@ -305,7 +305,7 @@ $EffectHandlerCreator $onListened($Listeners listeners) {
       if (effect is $Listened) {
         listeners.add(effect.type, effect.callback, effect.at);
       } else {
-        return handle(effect);
+        handle(effect);
       }
     };
   };
@@ -315,9 +315,9 @@ $EffectHandlerCreator $onVarUpdated(dynamic onUpdate($VarUpdated effect)) {
   return (handle) {
     return (effect) {
       if (effect is $VarUpdated) {
-        return onUpdate(effect);
+        onUpdate(effect);
       } else {
-        return handle(effect);
+        handle(effect);
       }
     };
   };

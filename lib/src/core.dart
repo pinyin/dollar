@@ -83,7 +83,7 @@ dynamic $raise(Object effect) {
   );
 }
 
-typedef $EffectHandler = dynamic Function(Object effect);
+typedef $EffectHandler = void Function(Object effect);
 
 typedef $EffectHandlerCreator = $EffectHandler Function($EffectHandler context);
 
