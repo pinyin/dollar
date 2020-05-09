@@ -11,7 +11,7 @@ dynamic $bind<T extends Function>(T func,
   final handler =
       (createHandler ?? _createDefaultHandler)(_handler ?? (effect) {});
 
-  handler($Bound._(() => boundFunction..context = _Context()));
+  handler($Reset._(() => boundFunction..context = _Context()));
 
   return boundFunction
     ..handler = handler
@@ -85,14 +85,14 @@ void $raise(Object effect) {
   );
 }
 
-class $Bound {
+class $Reset {
   void call() {
     _logic();
   }
 
   final void Function() _logic;
 
-  $Bound._(this._logic);
+  $Reset._(this._logic);
 }
 
 typedef $EffectHandler = void Function(Object effect);
