@@ -4,26 +4,14 @@ import 'dart:collection';
 dynamic $bind<T extends Function>(T func,
     [$EffectHandlerCreator createHandler]) {
   final isInAnotherBindFunction = _handler != null;
-  $Property<$BoundFunction> propertyInParent;
   final $BoundFunction boundFunction = isInAnotherBindFunction
-      ? (propertyInParent =
-              $property(() => $BoundFunction()..context = _Context()))
-          .value
+      ? ($property(() => $BoundFunction()..context = _Context())).value
       : ($BoundFunction()..context = _Context());
 
-  createHandler ??= _createDefaultHandler;
-  final parentHandler = _handler;
-  final handler = createHandler((effect) {
-    if (effect == _resetEffect) {
-      if (isInAnotherBindFunction) {
-        propertyInParent.value = null;
-      } else {
-        boundFunction.context = _Context();
-      }
-    } else {
-      parentHandler?.call(effect);
-    }
-  });
+  final handler =
+      (createHandler ?? _createDefaultHandler)(_handler ?? (effect) {});
+
+  handler($Bound._(() => boundFunction..context = _Context()));
 
   return boundFunction
     ..handler = handler
@@ -87,7 +75,7 @@ T $switch<T>(Object key, T logic()) {
   // TODO allow cleanup
 }
 
-dynamic $raise(Object effect) {
+void $raise(Object effect) {
   return runZoned<dynamic>(
     () => _handler(effect),
     zoneValues: <_HooksZoneValue, dynamic>{
@@ -97,9 +85,14 @@ dynamic $raise(Object effect) {
   );
 }
 
-const _resetEffect = Object();
-void $reset() {
-  $raise(_resetEffect);
+class $Bound {
+  void call() {
+    _logic();
+  }
+
+  final void Function() _logic;
+
+  $Bound._(this._logic);
 }
 
 typedef $EffectHandler = void Function(Object effect);

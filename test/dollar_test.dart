@@ -3,13 +3,13 @@ import 'package:test/test.dart';
 
 void main() {
   group('core', () {
-    group('bind', () {
+    group('bind & raise', () {
       test('should forward effects to handler', () {
         final effects = <dynamic>[];
         final func = () {
           $raise(1);
           $raise(2);
-        }.$bind((_) => effects.add);
+        }.$bind((_) => (effect) => effect is int ? effects.add(effect) : null);
         expect(effects, <dynamic>[]);
         func();
         expect(effects, [1, 2]);
@@ -23,7 +23,7 @@ void main() {
             $raise(3);
             $raise(4);
           }.$bind()();
-        }.$bind((_) => effects.add);
+        }.$bind((_) => (effect) => effect is int ? effects.add(effect) : null);
         expect(effects, <dynamic>[]);
         func();
         expect(effects, [1, 2, 3, 4]);
@@ -107,48 +107,31 @@ void main() {
       });
     });
 
-    group('raise', () {
-      test('should delegate call to handler', () {
-        final effects = <dynamic>[];
-        final func = $bind1<int, int>((int value) {
-          return $raise(value) as int;
-        }, (_) {
-          return (effect) {
-            effects.add(effect);
-            if (effect is int) return effect + 1;
-            return null;
-          };
-        });
-        expect(func(0), 1);
-        expect(func(1), 2);
-        expect(effects, [0, 1]);
-      });
-    });
-
     group('reset', () {
       test('should clear existing context after calling \$reset', () {
-        final func = $bind1((bool shouldReset) {
+        Function() reset;
+        final func = $bind0(() {
           final property = $property(() => -1);
           property.value++;
-          if (shouldReset) $reset();
           return property.value;
-        });
+        }, (_) => (effect) => effect is $Bound ? reset = effect : null);
 
-        expect(func(false), 0);
-        expect(func(false), 1);
-        expect(func(false), 2);
-        expect(func(true), 3);
-        expect(func(false), 0);
-        expect(func(false), 1);
+        expect(func(), 0);
+        expect(func(), 1);
+        expect(func(), 2);
+        expect(func(), 3);
+        reset();
+        expect(func(), 0);
+        expect(func(), 1);
       });
       test('should only clear one level of context', () {
-        final func = $bind1((bool shouldReset) {
-          final inner = $bind1((bool shouldReset) {
+        Function() reset;
+        final func = $bind0(() {
+          final inner = $bind0(() {
             final property = $property(() => -1);
             property.value++;
-            if (shouldReset) $reset();
             return property.value;
-          })(shouldReset);
+          }, (_) => (effect) => effect is $Bound ? reset = effect : null)();
 
           final property = $property(() => -1);
           property.value++;
@@ -156,12 +139,13 @@ void main() {
           return [inner, property.value];
         });
 
-        expect(func(false), [0, 0]);
-        expect(func(false), [1, 1]);
-        expect(func(false), [2, 2]);
-        expect(func(true), [3, 3]);
-        expect(func(false), [0, 4]);
-        expect(func(false), [1, 5]);
+        expect(func(), [0, 0]);
+        expect(func(), [1, 1]);
+        expect(func(), [2, 2]);
+        expect(func(), [3, 3]);
+        reset();
+        expect(func(), [0, 4]);
+        expect(func(), [1, 5]);
       });
     });
   });
@@ -245,7 +229,9 @@ void main() {
         final effects = <$VarUpdated>[];
         final func = $bind0(() {
           return $var(() => 1);
-        }, (_) => effects.add as Function(Object));
+        }, (_) {
+          return (effect) => effect is $VarUpdated ? effects.add(effect) : null;
+        });
         var v = func();
         v.value = 2;
         expect(effects.length, 1);
@@ -422,7 +408,7 @@ void main() {
         };
         final func = $bind0(() {
           $listen(listener);
-        }, (_) => (l) => effects.add(l as $Listened));
+        }, (_) => (effect) => effect is $Listened ? effects.add(effect) : null);
         func();
         func();
         expect(effects.length, 2);
