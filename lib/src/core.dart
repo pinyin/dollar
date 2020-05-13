@@ -59,7 +59,9 @@ T $isolate<T>(T func()) {
 }
 
 $Property<T> $property<T>([T init()]) {
-  return _cursor.next<T>()..value ??= init?.call();
+  final cursor = _cursor.next<T>();
+  if (!cursor.didInit && init != null) cursor.value = init();
+  return cursor;
 }
 
 T $switch<T>(Object key, T logic()) {
@@ -99,30 +101,22 @@ typedef $EffectHandler = void Function(Object effect);
 
 typedef $EffectHandlerCreator = $EffectHandler Function($EffectHandler parent);
 
-abstract class $Property<T> {
-  T get value;
+class $Property<T> {
+  bool get didInit => _didInit;
 
-  set value(T newValue);
-
-  T get() => value;
-
-  T set(T newValue) => value = newValue;
-}
-
-class _PropertyImpl<T> extends $Property<T> {
-  @override
   T get value => _value;
 
-  @override
-  set value(T newValue) => _value = newValue;
+  set value(T newValue) {
+    _value = newValue;
+    _didInit = true;
+  }
 
-  @override
-  T get() => value;
+  T get() => _value;
 
-  @override
   T set(T newValue) => value = newValue;
 
   T _value;
+  bool _didInit = false;
 }
 
 class _Context {
@@ -135,7 +129,7 @@ class _Context {
 class _Cursor {
   $Property<T> next<T>() {
     if (_entry.next == null)
-      _entry.list.add(_PropertyInContext(_PropertyImpl<T>()));
+      _entry.list.add(_PropertyInContext($Property<T>()));
     _entry = _entry.next;
     return _entry.value as $Property<T>;
   }

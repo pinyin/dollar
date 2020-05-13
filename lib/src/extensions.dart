@@ -119,16 +119,9 @@ $Var<T> $var<T>(T init()) {
 }
 
 T $cache<T>(T compute(), bool reusable) {
-  final didInit = $property(() => false);
-  final cached = $property<T>(() => null);
-  $if(!didInit.value || !reusable, () {
-    cached.value = $bind0(compute, (handle) {
-      return (effect) {
-        if (effect is $VarUpdated) didInit.value = false;
-        handle(effect);
-      };
-    })();
-    didInit.value = true;
+  final cached = $property<T>();
+  $if(!cached.didInit || !reusable, () {
+    cached.value = compute();
   });
   return cached.value;
 }
@@ -138,7 +131,7 @@ T $final<T>(T init()) {
 }
 
 T $prev<T>(T value) {
-  final curr = $property<T>(() => null);
+  final curr = $property<T>();
   final prev = curr.value;
   curr.value = value;
   return prev;
@@ -151,7 +144,7 @@ extension $Prev<T> on T {
 }
 
 T $distinct<T>(T value, [bool equals(T a, T b)]) {
-  final curr = $property<T>(() => null);
+  final curr = $property<T>();
   final shouldUpdate = curr.value == null ||
       !(equals?.call(curr.value, value) ?? curr.value == value);
   if (shouldUpdate) curr.value = value;
@@ -187,13 +180,13 @@ R $interpolate<T, R>(T value, R diff(T prev, T curr)) {
 }
 
 R $aggregate<T, R>(T value, R aggregator(R aggregate, T value)) {
-  final aggregated = $property<R>(() => null);
+  final aggregated = $property<R>();
   aggregated.value = aggregator(aggregated.value, value);
   return aggregated.value;
 }
 
 T $generate<T>(T compute(T prev)) {
-  final generated = $property<T>(() => null);
+  final generated = $property<T>();
   generated.value = compute(generated.value);
   return generated.value;
 }
@@ -218,7 +211,7 @@ extension $Effect on Function() Function() {
 }
 
 void $listen<T>(void callback(T event)) {
-  final at = $property(() => null);
+  final at = $property<Object>();
   final listener = $bind1(callback);
   $raise($Listened(listener, at));
 }

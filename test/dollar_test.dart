@@ -265,29 +265,6 @@ void main() {
         expect(func(false), 3);
         expect(func(true), 3);
       });
-      test('should clean cache when inner var is updated', () {
-        var count = 0;
-        $Var variable;
-        final func = $bind0(() {
-          return $cache(() {
-            count++;
-            variable = $var<int>(() => 1);
-            return variable;
-          }, true);
-        });
-        func();
-        expect(count, 1);
-        func();
-        expect(count, 1);
-        variable.value++;
-        func();
-        expect(count, 2);
-        func();
-        expect(count, 2);
-        variable.value++;
-        func();
-        expect(count, 3);
-      });
     });
 
     group('prev', () {
