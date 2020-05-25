@@ -60,7 +60,7 @@ T $isolate<T>(T func()) {
 
 $Property<T> $property<T>([T init()]) {
   final cursor = _cursor.next<T>();
-  if (!cursor.didInit && init != null) cursor.value = init();
+  if (!cursor.didInit && init != null) cursor.value = $isolate(init);
   return cursor;
 }
 
