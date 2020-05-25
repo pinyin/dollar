@@ -105,15 +105,13 @@ extension $RefExtension<T> on T {
 }
 
 $Var<T> $var<T>(T init()) {
-  final didInit = $property(() => false);
-  final value = $property<$Var<T>>(() => null);
-  $if(!didInit.value, () {
+  final value = $property<$Var<T>>();
+  $if(!value.didInit, () {
     value.value = _$VarImpl<T>(
       init(),
       $bind2<void, T, T>(
           (T from, T to) => $raise($VarUpdated(from, to, value))),
     );
-    didInit.value = true;
   });
   return value.value;
 }
