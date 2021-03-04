@@ -5,7 +5,7 @@ import 'package:dollar/dollar.dart';
 $EffectHandlerCreator $combineHandlers(
     Iterable<$EffectHandlerCreator> createHandlers) {
   return createHandlers
-      .reduce((l, r) => ($EffectHandler current) => r(l(current)));
+      .reduce((l, r) => ($EffectHandler? current) => r(l(current)));
 }
 
 $EffectHandlerCreator $onReset(void Function($Reset reset) callback) {
@@ -14,7 +14,7 @@ $EffectHandlerCreator $onReset(void Function($Reset reset) callback) {
       if (effect is $Reset) {
         callback(effect);
       } else {
-        parent(effect);
+        parent!(effect);
       }
     };
   };
@@ -41,7 +41,7 @@ extension OrBool on bool {
 }
 
 extension IterableEquals on Iterable {
-  bool shallowEqualsTo(Iterable other) {
+  bool shallowEqualsTo(Iterable? other) {
     if (identical(this, other)) return true;
     if (this == null || other == null) return false;
     var it1 = this.iterator;

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:collection';
 
 dynamic $bind<T extends Function>(T func,
-    [$EffectHandlerCreator createHandler]) {
+    [$EffectHandlerCreator? createHandler]) {
   final isInAnotherBindFunction = _handler != null;
   final $BoundFunction boundFunction = isInAnotherBindFunction
       ? ($property(() => $BoundFunction()..context = _Context())).value
@@ -18,22 +18,15 @@ dynamic $bind<T extends Function>(T func,
     ..func = func;
 }
 
-final _bind = $bind;
-
-extension $Bind on Function {
-  dynamic $bind([$EffectHandlerCreator createHandler]) =>
-      _bind(this, createHandler);
-}
-
 final $EffectHandlerCreator _createDefaultHandler =
-    (parent) => (effect) => parent(effect);
+    (parent) => (effect) => parent!(effect);
 
 enum _HooksZoneValue { handler, cursor }
 
-class $BoundFunction {
-  Function func;
-  _Context context;
-  $EffectHandler handler;
+class $BoundFunction implements Function {
+  late Function func;
+  late _Context context;
+  $EffectHandler? handler;
 
   @override
   dynamic noSuchMethod(Invocation invocation) {
@@ -58,15 +51,13 @@ T $isolate<T>(T func()) {
   );
 }
 
-$Property<T> $property<T>([T init()]) {
-  final cursor = _cursor.next<T>();
-  if (!cursor.didInit && init != null) cursor.value = $isolate(init);
+$Property<T> $property<T>(T init()) {
+  final cursor = _cursor!.next<T>(init);
   return cursor;
 }
 
-T $switch<T>(Object key, T logic()) {
+T $switch<T>(Object key, T Function() logic) {
   final contexts = $property(() => Map<Object, _Context>()).value;
-  if (logic == null) return null;
   return runZoned(
     () => logic(),
     zoneValues: <_HooksZoneValue, dynamic>{
@@ -79,13 +70,19 @@ T $switch<T>(Object key, T logic()) {
 
 void $raise(Object effect) {
   return runZoned<dynamic>(
-    () => _handler(effect),
+    () {
+      final handler = _handler;
+      if (handler == null) throw $NotInContext();
+      handler(effect);
+    },
     zoneValues: <_HooksZoneValue, dynamic>{
       _HooksZoneValue.handler: _handler,
       _HooksZoneValue.cursor: null,
     },
   );
 }
+
+class $NotInContext extends Error {}
 
 class $Reset {
   void call() {
@@ -97,26 +94,21 @@ class $Reset {
   $Reset._(this._logic);
 }
 
-typedef $EffectHandler = void Function(Object effect);
+typedef $EffectHandler = void Function(Object? effect);
 
-typedef $EffectHandlerCreator = $EffectHandler Function($EffectHandler parent);
+typedef $EffectHandlerCreator = $EffectHandler Function($EffectHandler? parent);
 
 class $Property<T> {
-  bool get didInit => _didInit;
-
   T get value => _value;
 
-  set value(T newValue) {
-    _value = newValue;
-    _didInit = true;
-  }
+  set value(T newValue) => _value = newValue;
 
   T get() => _value;
 
   T set(T newValue) => value = newValue;
 
   T _value;
-  bool _didInit = false;
+  $Property(this._value);
 }
 
 class _Context {
@@ -127,28 +119,28 @@ class _Context {
 }
 
 class _Cursor {
-  $Property<T> next<T>() {
-    if (_entry.next == null)
-      _entry.list.add(_PropertyInContext($Property<T>()));
-    _entry = _entry.next;
-    return _entry.value as $Property<T>;
+  $Property<T> next<T>(T Function() init) {
+    if (_entry!.next == null)
+      _entry!.list!.add(_PropertyInContext($Property<T>(init())));
+    _entry = _entry!.next;
+    return _entry!.value as $Property<T>;
   }
 
-  _PropertyInContext _entry;
+  _PropertyInContext? _entry;
 
   _Cursor(this._entry);
 }
 
 class _PropertyInContext extends LinkedListEntry<_PropertyInContext> {
-  $Property value;
+  $Property? value;
 
   _PropertyInContext(this.value);
 }
 
-_Cursor get _cursor => Zone.current[_HooksZoneValue.cursor] as _Cursor;
+_Cursor? get _cursor => Zone.current[_HooksZoneValue.cursor] as _Cursor?;
 
-$EffectHandler get _handler =>
-    Zone.current[_HooksZoneValue.handler] as $EffectHandler;
+$EffectHandler? get _handler =>
+    Zone.current[_HooksZoneValue.handler] as $EffectHandler?;
 
 class $Exception {
   final Object error;

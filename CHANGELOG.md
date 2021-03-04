@@ -28,3 +28,7 @@
 
 - Separate `$bind` into `$bind` and `$unbind`
 - Add several operators.
+
+## 0.3.0
+
+- multiple update

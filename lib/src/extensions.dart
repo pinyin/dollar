@@ -1,76 +1,53 @@
 import 'package:dollar/dollar.dart';
 
 R Function(A, B, C, D) $bind4<R, A, B, C, D>(R func(A a, B b, C c, D d),
-    [$EffectHandlerCreator createHandler]) {
+    [$EffectHandlerCreator? createHandler]) {
   final dynamic inner = $bind(
       (A a, B b, C c, D d, void e, void f, void g) => func(a, b, c, d),
       createHandler);
   return (a, b, c, d) => inner(a, b, c, d, null, null, null) as R;
 }
 
-extension $Bind4<R, A, B, C, D> on R Function(A, B, C, D) {
-  R Function(A, B, C, D) $bind([$EffectHandlerCreator createHandler]) =>
-      $bind4(this, createHandler);
-}
-
 R Function(A, B, C) $bind3<R, A, B, C>(R func(A a, B b, C c),
-    [$EffectHandlerCreator createHandler]) {
+    [$EffectHandlerCreator? createHandler]) {
   final dynamic inner = $bind(
       (A a, B b, C c, void d, void e, void f, void g) => func(a, b, c),
       createHandler);
   return (a, b, c) => inner(a, b, c, null, null, null, null) as R;
 }
 
-extension $Bind3<R, A, B, C> on R Function(A, B, C) {
-  R Function(A, B, C) $bind([$EffectHandlerCreator createHandler]) =>
-      $bind3(this, createHandler);
-}
-
 R Function(A, B) $bind2<R, A, B>(R func(A a, B b),
-    [$EffectHandlerCreator createHandler]) {
+    [$EffectHandlerCreator? createHandler]) {
   final dynamic inner = $bind(
       (A a, B b, void c, void d, void e, void f, void g) => func(a, b),
       createHandler);
   return (a, b) => inner(a, b, null, null, null, null, null) as R;
 }
 
-extension $Bind2<R, A, B> on R Function(A, B) {
-  R Function(A, B) $bind([$EffectHandlerCreator createHandler]) =>
-      $bind2(this, createHandler);
-}
-
-R Function(A) $bind1<R, A>(R func(A a), [$EffectHandlerCreator createHandler]) {
+R Function(A) $bind1<R, A>(R func(A a),
+    [$EffectHandlerCreator? createHandler]) {
   final dynamic inner = $bind(
       (A a, void b, void c, void d, void e, void f, void g) => func(a),
       createHandler);
   return (a) => inner(a, null, null, null, null, null, null) as R;
 }
 
-extension $Bind1<R, A> on R Function(A) {
-  R Function(A) $bind([$EffectHandlerCreator createHandler]) =>
-      $bind1(this, createHandler);
-}
-
-R Function() $bind0<R>(R func(), [$EffectHandlerCreator createHandler]) {
+R Function() $bind0<R>(R func(), [$EffectHandlerCreator? createHandler]) {
   final dynamic inner = $bind(
       (void a, void b, void c, void d, void e, void f, void g) => func(),
       createHandler);
   return () => inner(null, null, null, null, null, null, null) as R;
 }
 
-extension $Bind0<R> on R Function() {
-  R Function() $bind([$EffectHandlerCreator createHandler]) =>
-      $bind0(this, createHandler);
-}
-
 mixin $Method {
   T $method<T>(Function method, T Function() logic) {
     _bind ??= $isolate(() {
-      return $Bind2((Function method, dynamic Function() callback) {
+      return $bind2<dynamic, Function, dynamic Function()>(
+          (Function method, dynamic Function() callback) {
         return $switch<dynamic>(method, callback);
-      }).$bind($handle);
+      }, $handle);
     });
-    return _bind(method, logic) as T;
+    return _bind!(method, logic) as T;
   }
 
   $EffectHandlerCreator get $handle => (_) => (_) {};
@@ -79,20 +56,20 @@ mixin $Method {
     _bind = null;
   }
 
-  dynamic Function(Function method, dynamic Function()) _bind;
+  dynamic Function(Function method, dynamic Function())? _bind;
 }
 
-T $if<T>(bool condition, T then(), {T orElse()}) {
+T $if<T>(bool condition, T then(), {required T orElse()}) {
   return $switch(condition, () {
-    return condition ? then?.call() : orElse?.call();
+    return condition ? then() : orElse();
   });
 }
 
-T $unless<T>(bool condition, T run()) {
-  return $if(!condition, run);
+T $unless<T>(bool condition, T run(), {required T orElse()}) {
+  return $if(!condition, run, orElse: orElse);
 }
 
-$Ref<T> $ref<T>(T value) {
+$Ref<T>? $ref<T>(T value) {
   final property = $property<_$RefImpl<T>>(() => _$RefImpl(value));
   property.value.value = value;
   return property.value;
@@ -101,26 +78,16 @@ $Ref<T> $ref<T>(T value) {
 final _ref = $ref;
 
 extension $RefExtension<T> on T {
-  $Ref<T> get $ref => _ref<T>(this);
-}
-
-$Var<T> $var<T>(T init()) {
-  final value = $property<$Var<T>>();
-  $if(!value.didInit, () {
-    value.value = _$VarImpl<T>(
-      init(),
-      $bind2<void, T, T>(
-          (T from, T to) => $raise($VarUpdated(from, to, value))),
-    );
-  });
-  return value.value;
+  $Ref<T>? get $ref => _ref<T>(this);
 }
 
 T $cache<T>(T compute(), bool reusable) {
-  final cached = $property<T>();
-  $if(!cached.didInit || !reusable, () {
+  final cached = $property<T>(compute);
+  final isFirstRun = $property(() => true);
+  $if(!reusable && !isFirstRun.value, () {
     cached.value = compute();
-  });
+  }, orElse: () => null);
+  isFirstRun.value = false;
   return cached.value;
 }
 
@@ -128,8 +95,15 @@ T $final<T>(T init()) {
   return $cache<T>(() => init(), true);
 }
 
-T $prev<T>(T value) {
-  final curr = $property<T>();
+$Var<T> $var<T>(T init()) {
+  final updated = $bind0(() => $raise($VarUpdated()));
+  return $final<$Var<T>>(() {
+    return _$VarImpl<T>(init(), updated);
+  });
+}
+
+T? $prev<T>(T value) {
+  final curr = $property<T?>(() => null);
   final prev = curr.value;
   curr.value = value;
   return prev;
@@ -138,20 +112,20 @@ T $prev<T>(T value) {
 final _prev = $prev;
 
 extension $Prev<T> on T {
-  T get $prev => _prev<T>(this);
+  T? get $prev => _prev<T>(this);
 }
 
-T $distinct<T>(T value, [bool equals(T a, T b)]) {
-  final curr = $property<T>();
+T? $distinct<T>(T value, [bool equals(T? a, T b)?]) {
+  final curr = $property<T?>(() => null);
   final shouldUpdate = curr.value == null ||
       !(equals?.call(curr.value, value) ?? curr.value == value);
   if (shouldUpdate) curr.value = value;
   return curr.value;
 }
 
-T $while<T>(bool condition(), T compute()) {
-  compute = $bind0(compute);
-  T result;
+T? $while<T>(bool condition(), T? compute()) {
+  compute = $bind0(compute as T Function());
+  T? result;
   for (; $isolate(() => condition());) {
     result = compute();
   }
@@ -173,28 +147,28 @@ extension $ForEach<T> on Iterable<T> {
   void $forEach(void f(T element)) => _forEach<T>(this, f);
 }
 
-R $interpolate<T, R>(T value, R diff(T prev, T curr)) {
+R $interpolate<T, R>(T value, R diff(T? prev, T curr)) {
   return diff($prev(value), value);
 }
 
-R $aggregate<T, R>(T value, R aggregator(R aggregate, T value)) {
-  final aggregated = $property<R>();
+R? $aggregate<T, R>(T value, R aggregator(R? aggregate, T value)) {
+  final aggregated = $property<R?>(() => null);
   aggregated.value = aggregator(aggregated.value, value);
   return aggregated.value;
 }
 
-T $generate<T>(T compute(T prev)) {
-  final generated = $property<T>();
+T? $generate<T>(T compute(T? prev)) {
+  final generated = $property<T?>(() => null);
   generated.value = compute(generated.value);
   return generated.value;
 }
 
-T $memo<T>(T compute(), Iterable<dynamic> deps) {
+T? $memo<T>(T compute(), Iterable<dynamic> deps) {
   return $cache(compute, deps.shallowEqualsTo($prev(deps)));
 }
 
 void $effect(Function() work()) {
-  final cleanup = $property<Function()>(() => null);
+  final cleanup = $property<Function()?>(() => null);
   cleanup.value?.call();
   cleanup.value = work();
   $listen(($ContextTerminated _) => cleanup.value?.call());
@@ -209,7 +183,7 @@ extension $Effect on Function() Function() {
 }
 
 void $listen<T>(void callback(T event)) {
-  final at = $property<Object>();
+  final at = $property<Null>(() => null);
   final listener = $bind1(callback);
   $raise($Listened(listener, at));
 }
@@ -237,34 +211,18 @@ class _$VarImpl<T> extends $Var<T> {
 
   @override
   set value(T newValue) {
-    final prevValue = _value;
+    if (newValue == _value) return;
     _value = newValue;
-    onUpdate(prevValue, newValue);
+    onUpdate();
   }
 
   T _value;
-  final Function(T from, T to) onUpdate;
+  final Function() onUpdate;
 
   _$VarImpl(T value, this.onUpdate) : _value = value;
 }
 
-class $VarUpdated<T> {
-  final $Property at;
-  final T from;
-  final T to;
-
-  @override
-  bool operator ==(dynamic other) {
-    return other is $VarUpdated<T> &&
-        other.runtimeType == runtimeType &&
-        other.at == at;
-  }
-
-  @override
-  int get hashCode => at.hashCode;
-
-  $VarUpdated(this.from, this.to, this.at);
-}
+class $VarUpdated {}
 
 class $Listened<T> {
   final $Property at;
@@ -296,7 +254,7 @@ $EffectHandlerCreator $onListened($Listeners listeners) {
       if (effect is $Listened) {
         listeners.add(effect.type, effect.callback, effect.at);
       } else {
-        handle(effect);
+        handle!(effect);
       }
     };
   };
@@ -308,7 +266,7 @@ $EffectHandlerCreator $onVarUpdated(dynamic onUpdate($VarUpdated effect)) {
       if (effect is $VarUpdated) {
         onUpdate(effect);
       } else {
-        handle(effect);
+        handle!(effect);
       }
     };
   };
