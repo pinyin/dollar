@@ -163,7 +163,7 @@ T? $generate<T>(T compute(T? prev)) {
   return generated.value;
 }
 
-T? $memo<T>(T compute(), Iterable<dynamic> deps) {
+T $memo<T>(T compute(), Iterable<dynamic> deps) {
   return $cache(compute, deps.shallowEqualsTo($prev(deps)));
 }
 
