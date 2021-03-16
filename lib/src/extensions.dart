@@ -84,7 +84,7 @@ extension $RefExtension<T> on T {
 T $cache<T>(T compute(), bool reusable) {
   final cached = $property<T?>(() => null);
   final isFirstRun = $property(() => true);
-  $if(!reusable && !isFirstRun.value, () {
+  $if((!reusable && !isFirstRun.value) || isFirstRun.value, () {
     cached.value = compute();
   }, orElse: () => null);
   isFirstRun.value = false;
