@@ -384,6 +384,11 @@ void main() {
         deps = [2, 3];
         expect(func(), 3);
       });
+      test('should support Null', () {
+        $bind0(() {
+          $memo(() {}, <int>[1]);
+        });
+      });
     });
 
     group('listen', () {

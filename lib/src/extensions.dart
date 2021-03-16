@@ -69,7 +69,7 @@ T $unless<T>(bool condition, T run(), {required T orElse()}) {
   return $if(!condition, run, orElse: orElse);
 }
 
-$Ref<T>? $ref<T>(T value) {
+$Ref<T> $ref<T>(T value) {
   final property = $property<_$RefImpl<T>>(() => _$RefImpl(value));
   property.value.value = value;
   return property.value;
@@ -82,13 +82,13 @@ extension $RefExtension<T> on T {
 }
 
 T $cache<T>(T compute(), bool reusable) {
-  final cached = $property<T>(compute);
+  final cached = $property<T?>(() => null);
   final isFirstRun = $property(() => true);
   $if(!reusable && !isFirstRun.value, () {
     cached.value = compute();
   }, orElse: () => null);
   isFirstRun.value = false;
-  return cached.value;
+  return cached.value as T;
 }
 
 T $final<T>(T init()) {
@@ -167,7 +167,7 @@ T $memo<T>(T compute(), Iterable<dynamic> deps) {
   return $cache(compute, deps.shallowEqualsTo($prev(deps)));
 }
 
-void $effect(Function() work()) {
+void $effect(Function()? work()) {
   final cleanup = $property<Function()?>(() => null);
   cleanup.value?.call();
   cleanup.value = work();

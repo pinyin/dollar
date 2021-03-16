@@ -59,7 +59,7 @@ $Property<T> $property<T>(T init()) {
 T $switch<T>(Object key, T Function() logic) {
   final contexts = $property(() => Map<Object, _Context>()).value;
   return runZoned(
-    () => logic(),
+    () => logic.call(),
     zoneValues: <_HooksZoneValue, dynamic>{
       _HooksZoneValue.handler: _handler,
       _HooksZoneValue.cursor: (contexts[key] ??= _Context()).cursor,
@@ -112,29 +112,38 @@ class $Property<T> {
 }
 
 class _Context {
-  _Cursor get cursor => _Cursor(_properties.first);
+  // TODO move handlers here
+  _Cursor get cursor => _Cursor(this._cursors);
 
-  final _properties = LinkedList<_PropertyInContext>()
-    ..addFirst(_PropertyInContext(null));
+  final _cursors = LinkedList<_LinkedProperty>();
 }
 
 class _Cursor {
   $Property<T> next<T>(T Function() init) {
-    if (_entry!.next == null)
-      _entry!.list!.add(_PropertyInContext($Property<T>(init())));
-    _entry = _entry!.next;
+    if (_entry == null) {
+      if (_properties.isEmpty)
+        _properties.add(_LinkedProperty($Property<T>(init())));
+      _entry = _properties.first;
+    } else {
+      if (_entry!.next == null) {
+        assert(_entry == _properties.last);
+        _properties.add(_LinkedProperty($Property<T>(init())));
+      }
+      _entry = _entry!.next;
+    }
     return _entry!.value as $Property<T>;
   }
 
-  _PropertyInContext? _entry;
+  _LinkedProperty? _entry;
+  final LinkedList<_LinkedProperty> _properties;
 
-  _Cursor(this._entry);
+  _Cursor(this._properties);
 }
 
-class _PropertyInContext extends LinkedListEntry<_PropertyInContext> {
-  $Property? value;
+class _LinkedProperty extends LinkedListEntry<_LinkedProperty> {
+  final $Property value;
 
-  _PropertyInContext(this.value);
+  _LinkedProperty(this.value);
 }
 
 _Cursor? get _cursor => Zone.current[_HooksZoneValue.cursor] as _Cursor?;
