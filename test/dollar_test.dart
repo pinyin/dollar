@@ -223,7 +223,7 @@ void main() {
       test('should keep reference to value', () {
         final refs = <$Ref>[];
         final Null Function(int) func = $bind1((int value) {
-          refs.add((() => value).$ref!);
+          refs.add((() => value).$ref);
         });
         func(1);
         func(2);

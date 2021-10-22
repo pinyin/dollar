@@ -78,7 +78,7 @@ $Ref<T> $ref<T>(T value) {
 final _ref = $ref;
 
 extension $RefExtension<T> on T {
-  $Ref<T>? get $ref => _ref<T>(this);
+  $Ref<T> get $ref => _ref<T>(this);
 }
 
 T $cache<T>(T compute(), bool reusable) {
@@ -190,7 +190,12 @@ void $listen<T>(void callback(T event)) {
 
 abstract class $Ref<T> {
   T get value;
+
   T get() => value;
+
+  set value(T to);
+
+  void set(T to);
 }
 
 class _$RefImpl<T> extends $Ref<T> {
@@ -198,6 +203,9 @@ class _$RefImpl<T> extends $Ref<T> {
   T value;
 
   _$RefImpl(this.value);
+
+  @override
+  void set(T to) => value = to;
 }
 
 abstract class $Var<T> extends $Ref<T> {
