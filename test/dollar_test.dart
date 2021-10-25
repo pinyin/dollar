@@ -109,6 +109,26 @@ void main() {
         expect(func(1).value, 0);
         expect(func(2).value, 2);
       });
+      test('should remember properties based on keep func', () {
+        var shouldKeep = (Object _) => true;
+        final func = $bind1((int key) {
+          return $switch(key, () {
+            return $property(() => 0);
+          }, keep: shouldKeep);
+        });
+        func(0).value++;
+        func(2).value = 2;
+        expect(func(0).value, 1);
+        expect(func(1).value, 0);
+        expect(func(2).value, 2);
+
+        shouldKeep = (num) => num == 2;
+        func(3).value++;
+        expect(func(0).value, 0);
+        expect(func(1).value, 0);
+        expect(func(2).value, 2);
+        expect(func(3).value, 0);
+      });
     });
 
     group('reset', () {

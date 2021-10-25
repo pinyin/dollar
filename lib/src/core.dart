@@ -56,8 +56,17 @@ $Property<T> $property<T>(T init()) {
   return cursor;
 }
 
-T $switch<T>(Object key, T Function() logic) {
+T $switch<T>(Object key, T Function() logic, {bool Function(Object)? keep}) {
   final contexts = $property(() => Map<Object, _Context>()).value;
+  if (keep != null) {
+    runZoned(
+      () => contexts.removeWhere((key, _) => !keep(key)),
+      zoneValues: <_HooksZoneValue, dynamic>{
+        _HooksZoneValue.handler: _handler,
+        _HooksZoneValue.cursor: (contexts[_keepZone] ??= _Context()).cursor,
+      },
+    );
+  }
   return runZoned(
     () => logic.call(),
     zoneValues: <_HooksZoneValue, dynamic>{
@@ -65,8 +74,9 @@ T $switch<T>(Object key, T Function() logic) {
       _HooksZoneValue.cursor: (contexts[key] ??= _Context()).cursor,
     },
   );
-  // TODO allow cleanup
 }
+
+final _keepZone = Object();
 
 void $raise(Object effect) {
   return runZoned<dynamic>(
