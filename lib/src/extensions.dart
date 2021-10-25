@@ -44,7 +44,7 @@ mixin $Method {
     _bind ??= $isolate(() {
       return $bind2<dynamic, Function, dynamic Function()>(
           (Function method, dynamic Function() callback) {
-        return $switch<dynamic>(method, callback);
+        return $switch<dynamic, dynamic>(method, callback);
       }, $handle);
     });
     return _bind!(method, logic) as T;
