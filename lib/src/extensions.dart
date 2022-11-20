@@ -109,6 +109,11 @@ T? $prev<T>(T value) {
   return prev;
 }
 
+bool $isInit() {
+  final curr = $prev(false);
+  return curr ?? true;
+}
+
 final _prev = $prev;
 
 extension $Prev<T> on T {
@@ -233,7 +238,7 @@ class _$VarImpl<T> extends $Var<T> {
 class $VarUpdated {}
 
 class $Listened<T> {
-  final $Property at;
+  final $DollarProperty at;
   final Function callback;
   final Type type;
 
@@ -281,7 +286,7 @@ $EffectHandlerCreator $onVarUpdated(dynamic onUpdate($VarUpdated effect)) {
 }
 
 class $Listeners {
-  void add(Type eventType, Function callback, $Property at) {
+  void add(Type eventType, Function callback, $DollarProperty at) {
     assert(_types[at] == null || _types[at] == eventType);
     _types[at] = eventType;
     (_properties[eventType] ??= {}).add(at);
@@ -297,7 +302,7 @@ class $Listeners {
     }
   }
 
-  final _properties = Map<Type, Set<$Property>>();
-  final _callbacks = Map<$Property, Function>();
-  final _types = Map<$Property, Type>();
+  final _properties = Map<Type, Set<$DollarProperty>>();
+  final _callbacks = Map<$DollarProperty, Function>();
+  final _types = Map<$DollarProperty, Type>();
 }

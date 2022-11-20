@@ -60,7 +60,7 @@ void main() {
 
     group('property', () {
       test('should keep value across calls', () {
-        late $Property<int> property;
+        late $DollarProperty<int> property;
         final Null Function() func = $bind0(() {
           property = $property(() => 1);
           $property(() => 2);
@@ -73,7 +73,7 @@ void main() {
       });
 
       test('should keep value across async calls', () async {
-        final List<$Property<int?>> list = [];
+        final List<$DollarProperty<int?>> list = [];
         final func = $bind0(() async {
           final a = $property(() => 0);
           list.add(a);
@@ -202,8 +202,8 @@ void main() {
         expect(func(false), 2);
       });
       test('should create separated property context', () {
-        late $Property<int> a;
-        late $Property<int> b;
+        late $DollarProperty<int> a;
+        late $DollarProperty<int> b;
         final Null Function(bool) func = $bind1((bool input) {
           a = $property(() => 1);
           b = $if(input, () {
@@ -249,6 +249,18 @@ void main() {
         func(2);
         expect(refs[0], refs[1]);
         expect(refs[0].value(), 2);
+      });
+    });
+
+    group('isInit', () {
+      test('should return true on first run then false forever', () {
+        final func = $bind0(() {
+          return $isInit();
+        });
+        expect(func(), true);
+        expect(func(), false);
+        expect(func(), false);
+        expect(func(), false);
       });
     });
 

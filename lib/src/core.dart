@@ -51,7 +51,7 @@ T $isolate<T>(T func()) {
   );
 }
 
-$Property<T> $property<T>(T init()) {
+$DollarProperty<T> $property<T>(T init()) {
   final cursor = _cursor!.next<T>(init);
   return cursor;
 }
@@ -107,7 +107,7 @@ typedef $EffectHandler = void Function(Object? effect);
 
 typedef $EffectHandlerCreator = $EffectHandler Function($EffectHandler? parent);
 
-class $Property<T> {
+class $DollarProperty<T> {
   T get value => _value;
 
   set value(T newValue) => _value = newValue;
@@ -117,7 +117,8 @@ class $Property<T> {
   T set(T newValue) => value = newValue;
 
   T _value;
-  $Property(this._value);
+
+  $DollarProperty(this._value);
 }
 
 class _Context {
@@ -128,19 +129,19 @@ class _Context {
 }
 
 class _Cursor {
-  $Property<T> next<T>(T Function() init) {
+  $DollarProperty<T> next<T>(T Function() init) {
     if (_entry == null) {
       if (_properties.isEmpty)
-        _properties.add(_LinkedProperty($Property<T>(init())));
+        _properties.add(_LinkedProperty($DollarProperty<T>(init())));
       _entry = _properties.first;
     } else {
       if (_entry!.next == null) {
         assert(_entry == _properties.last);
-        _properties.add(_LinkedProperty($Property<T>(init())));
+        _properties.add(_LinkedProperty($DollarProperty<T>(init())));
       }
       _entry = _entry!.next;
     }
-    return _entry!.value as $Property<T>;
+    return _entry!.value as $DollarProperty<T>;
   }
 
   _LinkedProperty? _entry;
@@ -150,7 +151,7 @@ class _Cursor {
 }
 
 class _LinkedProperty extends LinkedListEntry<_LinkedProperty> {
-  final $Property value;
+  final $DollarProperty value;
 
   _LinkedProperty(this.value);
 }
