@@ -8,18 +8,6 @@ $EffectHandlerCreator $combineHandlers(
       .reduce((l, r) => ($EffectHandler? current) => r(l(current)));
 }
 
-$EffectHandlerCreator $onReset(void Function($Reset reset) callback) {
-  return (parent) {
-    return (effect) {
-      if (effect is $Reset) {
-        callback(effect);
-      } else {
-        parent!(effect);
-      }
-    };
-  };
-}
-
 extension AndBool on bool {
   bool operator &(bool other) {
     return and(other);

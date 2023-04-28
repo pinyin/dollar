@@ -3,177 +3,70 @@ import 'package:test/test.dart';
 
 void main() {
   group('core', () {
-    group('bind & raise', () {
+    group('context & effect', () {
       test('should forward effects to handler', () {
         final effects = <dynamic>[];
-        final Null Function() func = $bind0(() {
-          $raise(1);
-          $raise(2);
-        },
-            (Function(Object)? _) => ((Object? effect) =>
-                effect is int ? effects.add(effect) : null));
+        final Null Function() func = $context0(() {
+          $effect(1);
+          $effect(2);
+        }, onEffect: ($EffectHandler? _) => effects.add);
         expect(effects, <dynamic>[]);
         func();
         expect(effects, [1, 2]);
       });
-      test('should create new property context', () {
+
+      test('should pass parent effect handler to child', () {
         final effects = <dynamic>[];
-        final Null Function() func = $bind0(() {
-          $raise(1);
-          $raise(2);
-          $bind(() {
-            $raise(3);
-            $raise(4);
-          })();
-        },
-            (Function(Object)? _) => ((Object? effect) =>
-                effect is int ? effects.add(effect) : null));
+        final Null Function() func = $context0(() {
+          $context0(() {
+            $effect(1);
+            $effect(2);
+          }, onEffect: (p) => (o) => p?.call(o))();
+        }, onEffect: (_) => effects.add);
         expect(effects, <dynamic>[]);
         func();
-        expect(effects, [1, 2, 3, 4]);
-        effects.clear();
-        func();
-        expect(effects, [1, 2, 3, 4]);
+        expect(effects, [1, 2]);
       });
     });
 
-    group('isolate', () {
-      test('should hide context form callback', () {
-        final Null Function() func = $bind0(() {
-          $raise(1);
-          $isolate(() {
-            $raise(2);
-          });
-        });
-        expect(func, throwsA(TypeMatcher<$NotInContext>()));
-      });
-      test('should keep return value of inner function', () {
-        final dynamic func = $bind((int value) {
-          return $isolate(() {
-            return value;
-          });
-        });
-        expect(func(1), 1);
-        expect(func(3), 3);
-      });
-    });
-
-    group('property', () {
+    group('value', () {
       test('should keep value across calls', () {
-        late $DollarProperty<int> property;
-        final Null Function() func = $bind0(() {
-          property = $property(() => 1);
-          $property(() => 2);
-        });
-        func();
-        expect(property.value, 1);
-        property.value++;
-        func();
-        expect(property.value, 2);
-      });
-
-      test('should keep value across async calls', () async {
-        final List<$DollarProperty<int?>> list = [];
-        final func = $bind0(() async {
-          final a = $property(() => 0);
-          list.add(a);
+        final func = $context0(() {
+          final a = $value(() => 0);
           a.value++;
-          await Future<dynamic>.value();
-          await Future<dynamic>.value();
-          final b = $property(() => 0);
-          list.add(b);
-          b.value++;
+          return a.value;
         });
-        func();
-        expect(list.map((n) => n.value), [1]);
-        await Future<dynamic>.value();
-        func();
-        expect(list.map((n) => n.value), [2, 2]);
-        await Future<dynamic>.value();
-        expect(list.map((n) => n.value), [2, 2, 1]);
-        await Future<dynamic>.value();
-        expect(list.map((n) => n.value), [2, 2, 2, 2]);
-      });
-    });
-
-    group('switch', () {
-      test('should provide multiple contexts based on key', () {
-        final func = $bind1((int key) {
-          return $switch(key, () {
-            return $property(() => 0);
-          });
-        });
-        func(0).value++;
-        func(2).value = 2;
-        expect(func(0).value, 1);
-        expect(func(1).value, 0);
-        expect(func(2).value, 2);
-      });
-      test('should remember properties based on keep func', () {
-        var shouldKeep = (Object _) => true;
-        final func = $bind1((int key) {
-          return $switch(key, () {
-            return $property(() => 0);
-          }, keep: shouldKeep);
-        });
-        func(0).value++;
-        func(2).value = 2;
-        expect(func(0).value, 1);
-        expect(func(1).value, 0);
-        expect(func(2).value, 2);
-
-        shouldKeep = (num) => num == 2;
-        func(3).value++;
-        expect(func(0).value, 0);
-        expect(func(1).value, 0);
-        expect(func(2).value, 2);
-        expect(func(3).value, 0);
-      });
-    });
-
-    group('reset', () {
-      test('should clear existing context after calling \$reset', () {
-        late Function() reset;
-        final func = $bind0(() {
-          final property = $property(() => -1);
-          property.value++;
-          return property.value;
-        },
-            (_) => (effect) =>
-                effect is $Reset ? reset = () => effect.call() : null);
-
-        expect(func(), 0);
         expect(func(), 1);
         expect(func(), 2);
         expect(func(), 3);
-        reset();
-        expect(func(), 0);
-        expect(func(), 1);
       });
-      test('should only clear one level of context', () {
-        late Function() reset;
-        final func = $bind0(() {
-          final inner = $bind0(() {
-            final property = $property(() => -1);
-            property.value++;
-            return property.value;
-          },
-              (_) => (effect) =>
-                  effect is $Reset ? reset = () => effect.call() : null)();
 
-          final property = $property(() => -1);
-          property.value++;
+      test('should keep value across async calls', () async {
+        final func = $context0(() async {
+          final a = $value(() => 0);
+          await Future<dynamic>.value();
+          a.value++;
+          return a.value;
+        });
+        expect(await func(), 1);
+        expect(await func(), 2);
+        expect(await func(), 3);
+      });
+    });
 
-          return [inner, property.value];
+    group('fold & merge', () {
+      test('should provide multiple contexts based on key', () {
+        final func = $context1((int key) {
+          $fork(key);
+          final result = $value(() => 0);
+          result.value++;
+          return result.value;
         });
 
-        expect(func(), [0, 0]);
-        expect(func(), [1, 1]);
-        expect(func(), [2, 2]);
-        expect(func(), [3, 3]);
-        reset();
-        expect(func(), [0, 4]);
-        expect(func(), [1, 5]);
+        expect(func(0), 1);
+        expect(func(1), 1);
+        expect(func(0), 2);
+        expect(func(2), 1);
       });
     });
   });
@@ -191,58 +84,11 @@ void main() {
         expect(obj.inc(), 4);
       });
     });
-    group('if', () {
-      test('should call function by condition', () {
-        final func = $bind1((bool input) {
-          return $if(input, () {
-            return 1;
-          }, orElse: () => 2);
-        });
-        expect(func(true), 1);
-        expect(func(false), 2);
-      });
-      test('should create separated property context', () {
-        late $DollarProperty<int> a;
-        late $DollarProperty<int> b;
-        final Null Function(bool) func = $bind1((bool input) {
-          a = $property(() => 1);
-          b = $if(input, () {
-            return $property(() => 2);
-          }, orElse: () => $property(() => 3));
-          a.value++;
-          b.value--;
-        });
-        func(true);
-        expect(a.value, 2);
-        expect(b.value, 1);
-        func(true);
-        expect(a.value, 3);
-        expect(b.value, 0);
-        func(false);
-        expect(a.value, 4);
-        expect(b.value, 2);
-        func(false);
-        expect(a.value, 5);
-        expect(b.value, 1);
-      });
-    });
-
-    group('unless', () {
-      test('should call function when condition is not matched', () {
-        final func = $bind1((bool input) {
-          return $unless(input, () {
-            return 1;
-          }, orElse: () => 2);
-        });
-        expect(func(true), 2);
-        expect(func(false), 1);
-      });
-    });
 
     group('ref', () {
       test('should keep reference to value', () {
         final refs = <$Ref>[];
-        final Null Function(int) func = $bind1((int value) {
+        final Null Function(int) func = $context1((int value) {
           refs.add((() => value).$ref);
         });
         func(1);
@@ -254,7 +100,7 @@ void main() {
 
     group('isInit', () {
       test('should return true on first run then false forever', () {
-        final func = $bind0(() {
+        final func = $context0(() {
           return $isInit();
         });
         expect(func(), true);
@@ -267,9 +113,9 @@ void main() {
     group('var', () {
       test('should emit VarEffect on value update', () {
         final effects = <$VarUpdated>[];
-        final func = $bind0(() {
+        final func = $context0(() {
           return $var(() => 1);
-        }, (_) {
+        }, onEffect: (_) {
           return (effect) => effect is $VarUpdated ? effects.add(effect) : null;
         });
         var v = func();
@@ -285,7 +131,7 @@ void main() {
     group('final', () {
       test('should keep value', () {
         var value = 0;
-        final func = $bind0(() {
+        final func = $context0(() {
           return $final(() => ++value);
         });
         expect(func(), 1);
@@ -296,7 +142,7 @@ void main() {
     group('cache', () {
       test('should return cached value iff second parameter is true', () {
         var value = 0;
-        final func = $bind1((bool keep) {
+        final func = $context1((bool keep) {
           return $cache(() => ++value, keep);
         });
         expect(func(true), 1);
@@ -309,7 +155,7 @@ void main() {
 
     group('prev', () {
       test('should provide previous value', () {
-        final func = $bind1((Object value) {
+        final func = $context1((Object value) {
           return value.$prev;
         });
         expect(func(1), null);
@@ -321,7 +167,7 @@ void main() {
 
     group('distinct', () {
       test('should return last non-equal value', () {
-        final func = $bind1((int value) {
+        final func = $context1((int value) {
           return $distinct(value, (int? a, int b) => a! % 2 == b % 2)!;
         });
         expect(func(1), 1);
@@ -334,38 +180,10 @@ void main() {
       });
     });
 
-    group('while', () {
-      test('should run effect as long as condition returns true', () {
-        final func = $bind1((int loop) {
-          return $while(() => loop > 0, () {
-            loop--;
-            return ++$property(() => 0).value;
-          })!;
-        });
-        expect(func(2), 2);
-        expect(func(3), 5);
-        expect(func(4), 9);
-      });
-    });
-
-    group('forEach', () {
-      test('should apply bound function on each element of iterable', () {
-        final list = <int>[1, 2, 3, 4];
-        final result = <int>[];
-        final sideEffects = <int?>[];
-        list.$forEach((v) {
-          sideEffects.add(v.$prev);
-          result.add(v * 2);
-        });
-        expect(sideEffects, [null, 1, 2, 3]);
-        expect(result, [2, 4, 6, 8]);
-      });
-    });
-
     group('interpolate', () {
       test('should provide value and previous value to interpolate function',
           () {
-        final func = $bind1((int value) {
+        final func = $context1((int value) {
           return $interpolate(
               value, (int? prev, int curr) => (prev ?? 0) + curr);
         });
@@ -379,7 +197,7 @@ void main() {
     group('aggregate', () {
       test('should provide value and aggregated value to aggregate function',
           () {
-        final func = $bind1((int value) {
+        final func = $context1((int value) {
           return $aggregate(
               value, (int? prev, int curr) => (prev ?? 0) + curr)!;
         });
@@ -392,7 +210,7 @@ void main() {
 
     group('generate', () {
       test('should compute value based on previous value', () {
-        final func = $bind0(() {
+        final func = $context0(() {
           return $generate((int? prev) => (prev ?? 0) + 1)!;
         });
         expect(func(), 1);
@@ -404,8 +222,8 @@ void main() {
     group('memo', () {
       test('should recompute when dependencies changed', () {
         var deps = [1, 2];
-        final func = $bind0(() {
-          var init = $property(() => 0);
+        final func = $context0(() {
+          var init = $value(() => 0);
           return $memo(() => ++init.value, deps);
         });
         expect(func(), 1);
@@ -417,63 +235,9 @@ void main() {
         expect(func(), 3);
       });
       test('should support Null', () {
-        $bind0(() {
+        $context0(() {
           $memo(() {}, <int>[1]);
         });
-      });
-    });
-
-    group('listen', () {
-      test('should emit listener event', () {
-        final effects = <$Listened>[];
-        final listener = (int i) {
-          return;
-        };
-        final Null Function() func = $bind0(() {
-          $listen(listener);
-        }, (_) => (effect) => effect is $Listened ? effects.add(effect) : null);
-        func();
-        func();
-        expect(effects.length, 2);
-        expect(effects[0].at, effects[1].at);
-      });
-      test('should wrap callback into an effect', () {
-        final listeners = $Listeners();
-        var result = 0;
-        final listener = (int i) {
-          final callCount = $property(() => 0);
-          result = callCount.value += i;
-        };
-        final Null Function() func = $bind0(() {
-          $listen(listener);
-        }, $onListened(listeners));
-        func();
-        listeners.trigger(1);
-        func();
-        expect(result, 1);
-      });
-    });
-
-    group('effect', () {
-      test('should run one instance of work', () {
-        final listeners = $Listeners();
-        var closeCount = 0;
-        var result = 0;
-        final Null Function() func = $bind0(() {
-          $effect(() {
-            result++;
-            return () => closeCount++;
-          });
-        }, $onListened(listeners));
-        func();
-        expect(result, 1);
-        expect(closeCount, 0);
-        func();
-        expect(result, 2);
-        expect(closeCount, 1);
-        listeners.trigger($ContextTerminated());
-        expect(result, 2);
-        expect(closeCount, 2);
       });
     });
   });
@@ -507,34 +271,16 @@ void main() {
         expect(results, [3, 2]);
       });
     });
-    group('listenAt', () {
-      test('should save listeners in Listeners', () {
-        final listeners = $Listeners();
-        final results = <int>[];
-        final Null Function() func = $bind0(() {
-          $listen(results.add);
-        }, $onListened(listeners));
-        func();
-        listeners.trigger(1);
-        listeners.trigger(2);
-        expect(results, [1, 2]);
-      });
-      test('should be able to trigger event without listener', () {
-        final listeners = $Listeners();
-        listeners.trigger(1);
-        listeners.trigger(2);
-      });
-    });
     group('onUpdateVar', () {
       test('should call callback on UpdateVar effect', () {
-        final results = <$VarUpdated>[];
-        final func = $bind0(() {
+        final results = <dynamic>[];
+        final func = $context0(() {
           return $var(() => 0);
-        }, $onVarUpdated(results.add));
+        }, onEffect: (_) => results.add);
         func().value = 0;
         func().value = 1;
         func().value = 2;
-        expect(results.length, 2);
+        expect(results.length, 3);
       });
     });
   });
@@ -543,7 +289,7 @@ void main() {
 class _BoundObject with $Method {
   int? inc([int? set]) {
     return $method(inc, () {
-      final value = $property(() => -1);
+      final value = $value(() => -1);
       value.value++;
       if (set != null) value.value = set;
       return value.value;
@@ -552,7 +298,7 @@ class _BoundObject with $Method {
 
   int? dec([int? set]) {
     return $method(dec, () {
-      final value = $property(() => 1);
+      final value = $value(() => 1);
       value.value--;
       if (set != null) value.value = set;
       return value.value;

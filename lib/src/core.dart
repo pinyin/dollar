@@ -1,113 +1,92 @@
 import 'dart:async';
 import 'dart:collection';
 
-dynamic $bind<T extends Function>(T func,
-    [$EffectHandlerCreator? createHandler]) {
-  final isInAnotherBindFunction = _handler != null;
-  final $BoundFunction boundFunction = isInAnotherBindFunction
-      ? ($property(() => $BoundFunction()..context = _Context())).value
-      : ($BoundFunction()..context = _Context());
+// todo refactor with WeakReference & Finalizer
 
-  final handler =
-      (createHandler ?? _createDefaultHandler)(_handler ?? (effect) {});
-
-  handler($Reset._(() => boundFunction..context = _Context()));
-
-  return boundFunction
-    ..handler = handler
-    ..func = func;
+dynamic $context(Function func, {$EffectHandlerCreator? onEffect}) {
+  final values = LinkedList<_LinkedValue>();
+  final handler = onEffect?.call(_handler);
+  return _Context(func, values, handler);
 }
 
-final $EffectHandlerCreator _createDefaultHandler =
-    (parent) => (effect) => parent!(effect);
-
-enum _HooksZoneValue { handler, cursor }
-
-class $BoundFunction implements Function {
-  late Function func;
-  late _Context context;
-  $EffectHandler? handler;
-
+class _Context<T extends Function> {
   @override
   dynamic noSuchMethod(Invocation invocation) {
     return runZoned<dynamic>(
       () => Function.apply(
-          func, invocation.positionalArguments, invocation.namedArguments),
-      zoneValues: <_HooksZoneValue, dynamic>{
-        _HooksZoneValue.handler: handler,
-        _HooksZoneValue.cursor: context.cursor,
-      },
-    );
-  }
-}
-
-T $isolate<T>(T func()) {
-  return runZoned<T>(
-    func,
-    zoneValues: <_HooksZoneValue, dynamic>{
-      _HooksZoneValue.handler: null,
-      _HooksZoneValue.cursor: null,
-    },
-  );
-}
-
-$DollarProperty<T> $property<T>(T init()) {
-  final cursor = _cursor!.next<T>(init);
-  return cursor;
-}
-
-T $switch<T, K>(K key, T Function() logic, {bool Function(K)? keep}) {
-  final keepContext = $property<_Context?>(() => null);
-  final contexts = $property(() => Map<K, _Context>()).value;
-  if (keep != null) {
-    runZoned(
-      () => contexts.removeWhere((key, _) => !keep(key)),
+          _func, invocation.positionalArguments, invocation.namedArguments),
       zoneValues: <_HooksZoneValue, dynamic>{
         _HooksZoneValue.handler: _handler,
-        _HooksZoneValue.cursor: (keepContext.value ??= _Context()).cursor,
+        _HooksZoneValue.cursors: [_Cursor(_values)],
       },
     );
   }
-  return runZoned(
-    () => logic.call(),
-    zoneValues: <_HooksZoneValue, dynamic>{
-      _HooksZoneValue.handler: _handler,
-      _HooksZoneValue.cursor: (contexts[key] ??= _Context()).cursor,
-    },
-  );
-}
 
-void $raise(Object effect) {
-  return runZoned<dynamic>(
-    () {
-      final handler = _handler;
-      if (handler == null) throw $NotInContext();
-      handler(effect);
-    },
-    zoneValues: <_HooksZoneValue, dynamic>{
-      _HooksZoneValue.handler: _handler,
-      _HooksZoneValue.cursor: null,
-    },
-  );
-}
+  final T _func;
+  final LinkedList<_LinkedValue> _values;
+  final $EffectHandler? _handler;
 
-class $NotInContext extends Error {}
-
-class $Reset {
-  void call() {
-    _logic();
-  }
-
-  final void Function() _logic;
-
-  $Reset._(this._logic);
+  _Context(this._func, this._values, this._handler);
 }
 
 typedef $EffectHandler = void Function(Object? effect);
 
 typedef $EffectHandlerCreator = $EffectHandler Function($EffectHandler? parent);
 
-class $DollarProperty<T> {
+$Value<T> $value<T>(T init()) {
+  return _cursors!.last.next<T>(init);
+}
+
+void $fork(dynamic tag) {
+  final values = $value(() => <dynamic, LinkedList<_LinkedValue>>{});
+  values.value[tag] ??= LinkedList<_LinkedValue>();
+  _cursors!.add(_Cursor(values.value[tag]!));
+}
+
+void $merge() {
+  _cursors!.removeLast();
+}
+
+void $effect(Object effect) {
+  return runZoned<dynamic>(
+    () {
+      _handler?.call(effect);
+    },
+    zoneValues: <_HooksZoneValue, dynamic>{
+      _HooksZoneValue.handler: _handler,
+      _HooksZoneValue.cursors: null,
+    },
+  );
+}
+
+class _Cursor {
+  $Value<T> next<T>(T Function() init) {
+    if (_entry == null) {
+      if (_context.isEmpty) {
+        _context.add(_LinkedValue($Value<T>(init())));
+      }
+      _entry = _context.first;
+    } else {
+      if (_entry!.next == null) {
+        assert(_entry == _context.last);
+        _context.add(_LinkedValue($Value<T>(init())));
+      }
+      _entry = _entry!.next;
+    }
+    return _entry!.value as $Value<T>;
+  }
+
+  void reset() => _entry = null;
+
+  _LinkedValue? _entry;
+  final LinkedList<_LinkedValue> _context;
+
+  _Cursor? forkedFrom;
+
+  _Cursor(this._context);
+}
+
+class $Value<T> {
   T get value => _value;
 
   set value(T newValue) => _value = newValue;
@@ -118,52 +97,19 @@ class $DollarProperty<T> {
 
   T _value;
 
-  $DollarProperty(this._value);
+  $Value(this._value);
 }
 
-class _Context {
-  // TODO move handlers here
-  _Cursor get cursor => _Cursor(this._cursors);
+class _LinkedValue extends LinkedListEntry<_LinkedValue> {
+  final $Value value;
 
-  final _cursors = LinkedList<_LinkedProperty>();
+  _LinkedValue(this.value);
 }
 
-class _Cursor {
-  $DollarProperty<T> next<T>(T Function() init) {
-    if (_entry == null) {
-      if (_properties.isEmpty)
-        _properties.add(_LinkedProperty($DollarProperty<T>(init())));
-      _entry = _properties.first;
-    } else {
-      if (_entry!.next == null) {
-        assert(_entry == _properties.last);
-        _properties.add(_LinkedProperty($DollarProperty<T>(init())));
-      }
-      _entry = _entry!.next;
-    }
-    return _entry!.value as $DollarProperty<T>;
-  }
-
-  _LinkedProperty? _entry;
-  final LinkedList<_LinkedProperty> _properties;
-
-  _Cursor(this._properties);
-}
-
-class _LinkedProperty extends LinkedListEntry<_LinkedProperty> {
-  final $DollarProperty value;
-
-  _LinkedProperty(this.value);
-}
-
-_Cursor? get _cursor => Zone.current[_HooksZoneValue.cursor] as _Cursor?;
+List<_Cursor>? get _cursors =>
+    Zone.current[_HooksZoneValue.cursors] as List<_Cursor>?;
 
 $EffectHandler? get _handler =>
     Zone.current[_HooksZoneValue.handler] as $EffectHandler?;
 
-class $Exception {
-  final Object error;
-  final StackTrace stack;
-
-  $Exception(this.error, this.stack);
-}
+enum _HooksZoneValue { handler, cursors }
