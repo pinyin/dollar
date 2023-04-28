@@ -42,15 +42,21 @@ void main() {
       });
 
       test('should keep value across async calls', () async {
-        final func = $context0(() async {
+        final func = $context1((int n) async {
           final a = $value(() => 0);
-          await Future<dynamic>.value();
+          for (int i = 0; i < n; i++) {
+            await Future<dynamic>.value();
+          }
           a.value++;
           return a.value;
         });
-        expect(await func(), 1);
-        expect(await func(), 2);
-        expect(await func(), 3);
+        expect(await func(1), 1);
+        expect(await func(1), 2);
+        expect(await func(3), 3);
+        final a = func(2);
+        final b = func(1);
+        expect(await a, 5);
+        expect(await b, 4);
       });
     });
 
@@ -67,6 +73,24 @@ void main() {
         expect(func(1), 1);
         expect(func(0), 2);
         expect(func(2), 1);
+      });
+
+      test('should support native control structures', () async {
+        final func = $context1((int key) {
+          $fork(key == 0);
+          if (key == 0) {
+            final result = $value(() => 0);
+            result.value++;
+            return result.value;
+          }
+          $merge();
+          return key;
+        });
+
+        expect(func(0), 1);
+        expect(func(1), 1);
+        expect(func(0), 2);
+        expect(func(3), 3);
       });
     });
   });

@@ -9,30 +9,6 @@ dynamic $context(Function func, {$EffectHandlerCreator? onEffect}) {
   return _Context(func, values, handler);
 }
 
-class _Context<T extends Function> {
-  @override
-  dynamic noSuchMethod(Invocation invocation) {
-    return runZoned<dynamic>(
-      () => Function.apply(
-          _func, invocation.positionalArguments, invocation.namedArguments),
-      zoneValues: <_HooksZoneValue, dynamic>{
-        _HooksZoneValue.handler: _handler,
-        _HooksZoneValue.cursors: [_Cursor(_values)],
-      },
-    );
-  }
-
-  final T _func;
-  final LinkedList<_LinkedValue> _values;
-  final $EffectHandler? _handler;
-
-  _Context(this._func, this._values, this._handler);
-}
-
-typedef $EffectHandler = void Function(Object? effect);
-
-typedef $EffectHandlerCreator = $EffectHandler Function($EffectHandler? parent);
-
 $Value<T> $value<T>(T init()) {
   return _cursors!.last.next<T>(init);
 }
@@ -57,6 +33,44 @@ void $effect(Object effect) {
       _HooksZoneValue.cursors: null,
     },
   );
+}
+
+typedef $EffectHandler = void Function(Object? effect);
+
+typedef $EffectHandlerCreator = $EffectHandler Function($EffectHandler? parent);
+
+class $Value<T> {
+  T get value => _value;
+
+  set value(T newValue) => _value = newValue;
+
+  T get() => _value;
+
+  T set(T newValue) => value = newValue;
+
+  T _value;
+
+  $Value(this._value);
+}
+
+class _Context<T extends Function> {
+  @override
+  dynamic noSuchMethod(Invocation invocation) {
+    return runZoned<dynamic>(
+      () => Function.apply(
+          _func, invocation.positionalArguments, invocation.namedArguments),
+      zoneValues: <_HooksZoneValue, dynamic>{
+        _HooksZoneValue.handler: _handler,
+        _HooksZoneValue.cursors: [_Cursor(_values)],
+      },
+    );
+  }
+
+  final T _func;
+  final LinkedList<_LinkedValue> _values;
+  final $EffectHandler? _handler;
+
+  _Context(this._func, this._values, this._handler);
 }
 
 class _Cursor {
@@ -84,20 +98,6 @@ class _Cursor {
   _Cursor? forkedFrom;
 
   _Cursor(this._context);
-}
-
-class $Value<T> {
-  T get value => _value;
-
-  set value(T newValue) => _value = newValue;
-
-  T get() => _value;
-
-  T set(T newValue) => value = newValue;
-
-  T _value;
-
-  $Value(this._value);
 }
 
 class _LinkedValue extends LinkedListEntry<_LinkedValue> {
