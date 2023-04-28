@@ -5,8 +5,7 @@ import 'dart:collection';
 
 dynamic $context(Function func, {$EffectHandlerCreator? onEffect}) {
   final values = LinkedList<_LinkedValue>();
-  final handler = onEffect?.call(_handler);
-  return _Context(func, values, handler);
+  return _Context(func, values, onEffect?.call(_handler));
 }
 
 $Value<T> $value<T>(T init()) {
@@ -23,21 +22,21 @@ void $merge() {
   _cursors!.removeLast();
 }
 
-void $effect(Object effect) {
+void $effect(dynamic effect) {
+  final handler = _handler;
   return runZoned<dynamic>(
     () {
-      _handler?.call(effect);
+      handler?.call(effect);
     },
     zoneValues: <_HooksZoneValue, dynamic>{
-      _HooksZoneValue.handler: _handler,
+      _HooksZoneValue.handler: null,
       _HooksZoneValue.cursors: null,
     },
   );
 }
 
-typedef $EffectHandler = void Function(Object? effect);
-
 typedef $EffectHandlerCreator = $EffectHandler Function($EffectHandler? parent);
+typedef $EffectHandler = void Function(Object? effect);
 
 class $Value<T> {
   T get value => _value;

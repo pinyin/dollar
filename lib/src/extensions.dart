@@ -42,7 +42,7 @@ mixin $Method {
     return _bind!(method, logic) as T;
   }
 
-  $EffectHandlerCreator get $handle => (_) => (_) {};
+  $EffectHandlerCreator get $handle => (_) => (_) => null;
 
   void $reset() {
     _bind = null;

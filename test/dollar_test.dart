@@ -6,10 +6,10 @@ void main() {
     group('context & effect', () {
       test('should forward effects to handler', () {
         final effects = <dynamic>[];
-        final Null Function() func = $context0(() {
+        final func = $context0(() {
           $effect(1);
           $effect(2);
-        }, onEffect: ($EffectHandler? _) => effects.add);
+        }, onEffect: (_) => effects.add);
         expect(effects, <dynamic>[]);
         func();
         expect(effects, [1, 2]);
@@ -17,15 +17,18 @@ void main() {
 
       test('should pass parent effect handler to child', () {
         final effects = <dynamic>[];
-        final Null Function() func = $context0(() {
-          $context0(() {
+        final func = $context0(() {
+          return $context0(() {
             $effect(1);
             $effect(2);
-          }, onEffect: (p) => (o) => p?.call(o))();
+          }, onEffect: (p) => (e) => p?.call(e));
         }, onEffect: (_) => effects.add);
         expect(effects, <dynamic>[]);
-        func();
+        final inner = func();
+        inner();
         expect(effects, [1, 2]);
+        inner();
+        expect(effects, [1, 2, 1, 2]);
       });
     });
 
@@ -139,9 +142,9 @@ void main() {
         final effects = <$VarUpdated>[];
         final func = $context0(() {
           return $var(() => 1);
-        }, onEffect: (_) {
-          return (effect) => effect is $VarUpdated ? effects.add(effect) : null;
-        });
+        },
+            onEffect: (p) =>
+                (effect) => effect is $VarUpdated ? effects.add(effect) : null);
         var v = func();
         v.value = 2;
         expect(effects.length, 1);
@@ -267,34 +270,6 @@ void main() {
   });
 
   group('utils', () {
-    group('combineHandlers', () {
-      test('should call last handler', () {
-        final results = <int>[];
-        $combineHandlers([
-          (_) => (_) => results.add(1),
-          (_) => (_) => results.add(2),
-        ])(null)(null);
-        expect(results, [2]);
-      });
-      test('should provide lefter handler as parent of right handler', () {
-        final results = <int>[];
-        final handlers = <$EffectHandlerCreator>[];
-        handlers.add((parent) => (_) {});
-        handlers.add((parent) => (_) {
-              results.add(1);
-              parent!(_);
-            });
-        handlers.add((parent) => (_) {
-              results.add(2);
-            });
-        handlers.add((parent) => (_) {
-              results.add(3);
-              parent!(_);
-            });
-        $combineHandlers(handlers)(null)(null);
-        expect(results, [3, 2]);
-      });
-    });
     group('onUpdateVar', () {
       test('should call callback on UpdateVar effect', () {
         final results = <dynamic>[];
