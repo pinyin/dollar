@@ -85,11 +85,8 @@ T $final<T>(T init()) {
 $Var<T> $var<T>(T init()) {
   final updated = $final(() => $context0(() {
         $effect($VarUpdated());
-      }));
-  $effect($VarUpdated());
-  return $final<$Var<T>>(() {
-    return _$VarImpl<T>(init(), updated);
-  });
+      }, onEffect: (p) => (e) => p?.call(e)));
+  return $final<$Var<T>>(() => _$VarImpl<T>(init(), updated));
 }
 
 T? $prev<T>(T value) {

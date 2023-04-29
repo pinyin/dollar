@@ -151,7 +151,10 @@ void main() {
         effects.clear();
         v = func();
         v.value = 3;
-        expect(effects.length, 1);
+        v.value = 3;
+        v.value = 3;
+        v.value = 3;
+        expect(effects.length, 4);
       });
     });
 
