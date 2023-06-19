@@ -10,27 +10,24 @@ Inspired by React hooks.
 
 ```dart
 
-import 'package:dollar/dollar.dart';
-
-final func = $bind((bool input) {
-  final a = $cursor(() => 1).value;
-  final b = $if(input, () {
-    return $cursor(() => 2);
-  }, orElse: ()=> $cursor(()=> 3)).value;
-  a.value ++; 
-  b.value --;
-  // a.value & b.value will be kept across calls
-}, (_) {});
-func(true);
-// a.value == 2, b.value == 1
-func(true);
-// a.value == 3, b.value == 0
-func(false);
-// a.value == 4, b.value == 2
-func(false);
-// a.value == 5, b.value == 1
-
+final func = $1((bool input) {
+  final a = $value(() => 1);
+  $fork(input);
+  final b = input ? $value(() => 2) : $value(() => 3);
+  $merge();
+  a.value++;
+  b.value--;
+  return [a.value, b.value];
+});
+expect
+(
+func(true), [2, 1]);
+expect(func(true), [3, 0]);
+expect(func(false), [4, 2]);
+expect(func(false), [5, 1]);
+expect(func(true), [6, -1]);
+expect(func(false), [7, 0]);
 ```
 
-See tests for more examples.
+See tests for more usages.
 

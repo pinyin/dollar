@@ -41,7 +41,7 @@ mixin $Method {
     return _bind!(method, logic) as T;
   }
 
-  $EffectHandlerCreator get $handle => popupEffect;
+  $EffectHandlerCreator get $handle => (p) => (o) => p?.call(o);
 
   void $reset() {
     _bind = null;
@@ -179,3 +179,18 @@ class _$VarImpl<T> extends $Var<T> {
 }
 
 class $VarUpdated {}
+
+extension on Iterable? {
+  bool shallowEqualsTo(Iterable? other) {
+    if (identical(this, other)) return true;
+    if (this == null || other == null) return false;
+    var it1 = this!.iterator;
+    var it2 = other.iterator;
+    while (true) {
+      bool hasNext = it1.moveNext();
+      if (hasNext != it2.moveNext()) return false;
+      if (!hasNext) return true;
+      if (it1.current != it2.current) return false;
+    }
+  }
+}

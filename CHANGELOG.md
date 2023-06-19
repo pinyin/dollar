@@ -32,3 +32,9 @@
 ## 0.3.0
 
 - multiple update
+
+## 0.4.0
+
+- support original control structures such as `if` `switch` and `for`
+- change `$bind` to `$`
+- `$` no longer creates a variable by default

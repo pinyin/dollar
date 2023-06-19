@@ -34,14 +34,21 @@ void main() {
 
     group('value', () {
       test('should keep value across calls', () {
-        final func = $0(() {
-          final a = $value(() => 0);
+        final func = $1((bool input) {
+          final a = $value(() => 1);
+          $fork(input);
+          final b = input ? $value(() => 2) : $value(() => 3);
+          $merge();
           a.value++;
-          return a.value;
+          b.value--;
+          return [a.value, b.value];
         });
-        expect(func(), 1);
-        expect(func(), 2);
-        expect(func(), 3);
+        expect(func(true), [2, 1]);
+        expect(func(true), [3, 0]);
+        expect(func(false), [4, 2]);
+        expect(func(false), [5, 1]);
+        expect(func(true), [6, -1]);
+        expect(func(false), [7, 0]);
       });
 
       test('should keep value across async calls', () async {
