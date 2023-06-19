@@ -1,38 +1,37 @@
 import 'package:dollar/dollar.dart';
 
-R Function(A, B, C, D) $context4<R, A, B, C, D>(R func(A a, B b, C c, D d),
+R Function(A, B, C, D) $4<R, A, B, C, D>(R func(A a, B b, C c, D d),
     {$EffectHandlerCreator? onEffect}) {
   final dynamic inner =
-      $context((A a, B b, C c, D d) => func(a, b, c, d), onEffect: onEffect);
+      $((A a, B b, C c, D d) => func(a, b, c, d), onEffect: onEffect);
   return (a, b, c, d) => inner(a, b, c, d) as R;
 }
 
-R Function(A, B, C) $context3<R, A, B, C>(R func(A a, B b, C c),
+R Function(A, B, C) $3<R, A, B, C>(R func(A a, B b, C c),
     {$EffectHandlerCreator? onEffect}) {
-  final dynamic inner =
-      $context((A a, B b, C c) => func(a, b, c), onEffect: onEffect);
+  final dynamic inner = $((A a, B b, C c) => func(a, b, c), onEffect: onEffect);
   return (a, b, c) => inner(a, b, c) as R;
 }
 
-R Function(A, B) $context2<R, A, B>(R func(A a, B b),
+R Function(A, B) $2<R, A, B>(R func(A a, B b),
     {$EffectHandlerCreator? onEffect}) {
-  final dynamic inner = $context((A a, B b) => func(a, b), onEffect: onEffect);
+  final dynamic inner = $((A a, B b) => func(a, b), onEffect: onEffect);
   return (a, b) => inner(a, b) as R;
 }
 
-R Function(A) $context1<R, A>(R func(A a), {$EffectHandlerCreator? onEffect}) {
-  final dynamic inner = $context((A a) => func(a), onEffect: onEffect);
+R Function(A) $1<R, A>(R func(A a), {$EffectHandlerCreator? onEffect}) {
+  final dynamic inner = $((A a) => func(a), onEffect: onEffect);
   return (a) => inner(a) as R;
 }
 
-R Function() $context0<R>(R func(), {$EffectHandlerCreator? onEffect}) {
-  final dynamic inner = $context(() => func(), onEffect: onEffect);
+R Function() $0<R>(R func(), {$EffectHandlerCreator? onEffect}) {
+  final dynamic inner = $(() => func(), onEffect: onEffect);
   return () => inner() as R;
 }
 
 mixin $Method {
   T $method<T>(Function method, T Function() logic) {
-    _bind ??= $context2<dynamic, Function, dynamic Function()>(
+    _bind ??= $2<dynamic, Function, dynamic Function()>(
         (Function method, dynamic Function() logic) {
       $fork(method);
       final dynamic result = logic();
@@ -42,7 +41,7 @@ mixin $Method {
     return _bind!(method, logic) as T;
   }
 
-  $EffectHandlerCreator get $handle => (_) => (_) => null;
+  $EffectHandlerCreator get $handle => popupEffect;
 
   void $reset() {
     _bind = null;
@@ -83,7 +82,7 @@ T $final<T>(T init()) {
 }
 
 $Var<T> $var<T>(T init()) {
-  final updated = $final(() => $context0(() {
+  final updated = $final(() => $0(() {
         $effect($VarUpdated());
       }, onEffect: (p) => (e) => p?.call(e)));
   return $final<$Var<T>>(() => _$VarImpl<T>(init(), updated));

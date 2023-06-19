@@ -6,7 +6,7 @@ void main() {
     group('context & effect', () {
       test('should forward effects to handler', () {
         final effects = <dynamic>[];
-        final func = $context0(() {
+        final func = $0(() {
           $effect(1);
           $effect(2);
         }, onEffect: (_) => effects.add);
@@ -17,8 +17,8 @@ void main() {
 
       test('should pass parent effect handler to child', () {
         final effects = <dynamic>[];
-        final func = $context0(() {
-          return $context0(() {
+        final func = $0(() {
+          return $0(() {
             $effect(1);
             $effect(2);
           }, onEffect: (p) => (e) => p?.call(e));
@@ -34,7 +34,7 @@ void main() {
 
     group('value', () {
       test('should keep value across calls', () {
-        final func = $context0(() {
+        final func = $0(() {
           final a = $value(() => 0);
           a.value++;
           return a.value;
@@ -45,7 +45,7 @@ void main() {
       });
 
       test('should keep value across async calls', () async {
-        final func = $context1((int n) async {
+        final func = $1((int n) async {
           final a = $value(() => 0);
           for (int i = 0; i < n; i++) {
             await Future<dynamic>.value();
@@ -65,7 +65,7 @@ void main() {
 
     group('fold & merge', () {
       test('should provide multiple contexts based on key', () {
-        final func = $context1((int key) {
+        final func = $1((int key) {
           $fork(key);
           final result = $value(() => 0);
           result.value++;
@@ -79,7 +79,7 @@ void main() {
       });
 
       test('should support native control structures', () async {
-        final func = $context1((int key) {
+        final func = $1((int key) {
           $fork(key == 0);
           if (key == 0) {
             final result = $value(() => 0);
@@ -115,7 +115,7 @@ void main() {
     group('ref', () {
       test('should keep reference to value', () {
         final refs = <$Ref>[];
-        final Null Function(int) func = $context1((int value) {
+        final Null Function(int) func = $1((int value) {
           refs.add((() => value).$ref);
         });
         func(1);
@@ -127,7 +127,7 @@ void main() {
 
     group('isInit', () {
       test('should return true on first run then false forever', () {
-        final func = $context0(() {
+        final func = $0(() {
           return $isInit();
         });
         expect(func(), true);
@@ -140,7 +140,7 @@ void main() {
     group('var', () {
       test('should emit VarEffect on value update', () {
         final effects = <$VarUpdated>[];
-        final func = $context0(() {
+        final func = $0(() {
           return $var(() => 1);
         },
             onEffect: (p) =>
@@ -161,7 +161,7 @@ void main() {
     group('final', () {
       test('should keep value', () {
         var value = 0;
-        final func = $context0(() {
+        final func = $0(() {
           return $final(() => ++value);
         });
         expect(func(), 1);
@@ -172,7 +172,7 @@ void main() {
     group('cache', () {
       test('should return cached value iff second parameter is true', () {
         var value = 0;
-        final func = $context1((bool keep) {
+        final func = $1((bool keep) {
           return $cache(() => ++value, keep);
         });
         expect(func(true), 1);
@@ -185,7 +185,7 @@ void main() {
 
     group('prev', () {
       test('should provide previous value', () {
-        final func = $context1((Object value) {
+        final func = $1((Object value) {
           return value.$prev;
         });
         expect(func(1), null);
@@ -197,7 +197,7 @@ void main() {
 
     group('distinct', () {
       test('should return last non-equal value', () {
-        final func = $context1((int value) {
+        final func = $1((int value) {
           return $distinct(value, (int? a, int b) => a! % 2 == b % 2)!;
         });
         expect(func(1), 1);
@@ -213,7 +213,7 @@ void main() {
     group('interpolate', () {
       test('should provide value and previous value to interpolate function',
           () {
-        final func = $context1((int value) {
+        final func = $1((int value) {
           return $interpolate(
               value, (int? prev, int curr) => (prev ?? 0) + curr);
         });
@@ -227,7 +227,7 @@ void main() {
     group('aggregate', () {
       test('should provide value and aggregated value to aggregate function',
           () {
-        final func = $context1((int value) {
+        final func = $1((int value) {
           return $aggregate(
               value, (int? prev, int curr) => (prev ?? 0) + curr)!;
         });
@@ -240,7 +240,7 @@ void main() {
 
     group('generate', () {
       test('should compute value based on previous value', () {
-        final func = $context0(() {
+        final func = $0(() {
           return $generate((int? prev) => (prev ?? 0) + 1)!;
         });
         expect(func(), 1);
@@ -252,7 +252,7 @@ void main() {
     group('memo', () {
       test('should recompute when dependencies changed', () {
         var deps = [1, 2];
-        final func = $context0(() {
+        final func = $0(() {
           var init = $value(() => 0);
           return $memo(() => ++init.value, deps);
         });
@@ -265,7 +265,7 @@ void main() {
         expect(func(), 3);
       });
       test('should support Null', () {
-        $context0(() {
+        $0(() {
           $memo(() {}, <int>[1]);
         });
       });
@@ -276,7 +276,7 @@ void main() {
     group('onUpdateVar', () {
       test('should call callback on UpdateVar effect', () {
         final results = <dynamic>[];
-        final func = $context0(() {
+        final func = $0(() {
           return $var(() => 0);
         }, onEffect: (_) => results.add);
         func().value = 0;

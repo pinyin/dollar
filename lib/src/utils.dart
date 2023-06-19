@@ -1,3 +1,5 @@
+import 'package:dollar/dollar.dart';
+
 /// combine handlers from right to left
 /// every lefter handler is provided as the context of the righter handler
 extension AndBool on bool {
@@ -34,3 +36,5 @@ extension IterableEquals on Iterable {
     }
   }
 }
+
+final $EffectHandlerCreator popupEffect = (p) => (o) => p?.call(o);

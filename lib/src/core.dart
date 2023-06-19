@@ -3,7 +3,7 @@ import 'dart:collection';
 
 // todo refactor with WeakReference & Finalizer
 
-dynamic $context(Function func, {$EffectHandlerCreator? onEffect}) {
+dynamic $(Function func, {$EffectHandlerCreator? onEffect}) {
   final values = LinkedList<_LinkedValue>();
   return _Context(func, values, onEffect?.call(_handler));
 }
